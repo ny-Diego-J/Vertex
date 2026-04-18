@@ -33,7 +33,7 @@ public class DirReader {
                         Directory subDir = new Directory(name, currentX[0], currentY[0], color, current);
                         current.children.add(subDir);
 
-                        if (recursionState < 0) {
+                        if (recursionState < 1) {
                             getDirectories(subDir, p.toString(), recursionState + 1);
                         }
                     } catch (IOException e) {

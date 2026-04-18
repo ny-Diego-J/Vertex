@@ -1,5 +1,6 @@
 package dj;
 
+import dj.filesystem.Directory;
 import dj.filesystem.Node;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
@@ -167,11 +168,6 @@ public class Gui {
             glTranslatef(centerX, centerY, 0);
             glScalef(camera.zoom, camera.zoom, 1.0f);
             glTranslatef(-camera.x, -camera.y, 0);
-
-            for (Node n : ct.root.children){
-                n.printSelf();
-            }
-
             glPopMatrix();
 
             nvgBeginFrame(nvg, width, height, 1.0f);
@@ -181,10 +177,7 @@ public class Gui {
             nvgScale(nvg, camera.zoom, camera.zoom);
             nvgTranslate(nvg, -camera.x, -camera.y);
 
-            for (Node n : ct.root.children){
-                n.printSelfText(nvg);
-            }
-
+            ct.root.printSelf(nvg, winWidth[0], winHeight[0]);
 
             nvgRestore(nvg);
             nvgEndFrame(nvg);
@@ -203,6 +196,7 @@ public class Gui {
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.y += speed;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.x -= speed;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.x += speed;
+        if (glfwGetKey(window,GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) ct.reloadFiles();
 
         // Zoom with Q and E
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.zoom *= 1.02f;

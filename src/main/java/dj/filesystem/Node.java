@@ -4,17 +4,14 @@ import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
-import static org.lwjgl.nanovg.NanoVG.nvgFillColor;
-import static org.lwjgl.nanovg.NanoVG.nvgRGBAf;
-import static org.lwjgl.opengl.GL11.*;
+import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
     private float fontSize = 20.0f;
     private static final NVGColor textColor = NVGColor.create();
     String name;
     float x, y;
-    float width = 100.0f;
-    float height = 100.0f;
+    float radius = 25.0f;
     private Vector4f color;
     Node parent;
 
@@ -23,7 +20,7 @@ public class Node {
         this.x = x;
         this.y = y;
         this.color = color;
-        fontSize = width / name.length() * 1.5f;
+        this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
         this.parent = parent;
     }
 
@@ -31,31 +28,25 @@ public class Node {
         NanoVG.nvgFontSize(nvg, fontSize);
         NanoVG.nvgFontFace(nvg, "jbm");
         nvgFillColor(nvg, nvgRGBAf(1, 1, 1, 1, textColor));
-        NanoVG.nvgTextAlign(nvg, NanoVG.NVG_ALIGN_CENTER);
-        NanoVG.nvgText(nvg, x + width / 2, y + height / 2, name);
+        NanoVG.nvgTextAlign(nvg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
+        NanoVG.nvgText(nvg, x, y, name);
     }
 
-    private String[] getLineBreaks(long nvg) {
-        float charWidth = NanoVG.nvgTextBounds(nvg, 0, 0, "A", (float[]) null);
-        return null;
+    public void printAtPos(long nvg, float x, float y, float radius) {
+        nvgBeginPath(nvg);
+        nvgCircle(nvg, x, y, radius);
+        nvgFillColor(nvg, getColor());
+        nvgFill(nvg);
     }
 
-    public void printSelf() {
-        glColor4f(color.x, color.y, color.z, color.w);
-        glBegin(GL_QUADS);
-        glVertex2f(x, y);
-        glVertex2f(x + width, y);
-        glVertex2f(x + width, y + height);
-        glVertex2f(x, y + height);
-        glEnd();
+    public void printSelf(long nvg, int width, int height) {
+        printAtPos(nvg, x, y, radius);
+        printSelfText(nvg);
+    }
 
-        glColor4f(color.x + 0.2f, color.y + 0.2f, color.z + 0.2f, 1.0f); // Etwas heller
-        glLineWidth(2f);
-        glBegin(GL_LINE_LOOP);
-        glVertex2f(x, y);
-        glVertex2f(x + width, y);
-        glVertex2f(x + width, y + height);
-        glVertex2f(x, y + height);
-        glEnd();
+    public NVGColor getColor() {
+        NVGColor textColor = NVGColor.create();
+        nvgRGBAf(color.x, color.y, color.z, color.w, textColor);
+        return textColor;
     }
 }
