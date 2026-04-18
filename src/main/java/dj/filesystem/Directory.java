@@ -1,15 +1,32 @@
 package dj.filesystem;
 
 import org.joml.Vector4f;
+import org.lwjgl.nanovg.NanoVG;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Directory extends Node {
-    private Map<String, Node> children = new HashMap<>();
+import static org.lwjgl.nanovg.NanoVG.nvgFillColor;
+import static org.lwjgl.nanovg.NanoVG.nvgRGBAf;
 
-    public Directory(String name, float x, float y, Vector4f color, Map<String, Node> children) {
-        super(name, x, y, color);
-        this.children = children;
+public class Directory extends Node {
+    public ArrayList<Node> children;
+
+    public Directory(String name, float x, float y, Vector4f color, Node parent) {
+        super(name, x, y, color, parent);
     }
+
+    @Override
+    public void printSelfText(long nvg) {
+        super.printSelfText(nvg);
+        if (this.children != null) {
+            for (Node n : children) {
+                n.printSelf();
+                n.printSelfText(nvg);
+            }
+        }
+    }
+
+
 }

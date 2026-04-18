@@ -11,48 +11,65 @@ import java.util.stream.Stream;
 
 public class DirReader {
 
-    public ArrayList<Node> getDirectories(String pathString) throws IOException {
-        ArrayList<Node> nodes = new ArrayList<>();
+    public Directory getDirectories(Directory current, String pathString, int recursionState) throws IOException {
         Path path = Paths.get(pathString);
 
-        // Wir löschen die alten Nodes, bevor wir neue laden
-        nodes.clear();
+        if (current.children == null) current.children = new ArrayList<>();
 
         try (Stream<Path> stream = Files.list(path)) {
-            final float[] currentX = {50}; // Startposition X
-            final float[] currentY = {50}; // Startposition Y
-            float spacing = 20;  // Abstand zwischen den Nodes
+            final float[] currentX = {50};
+            final float[] currentY = {50};
+            float spacing = 20;
 
             stream.forEach(p -> {
                 String name = p.getFileName().toString();
                 boolean isDir = Files.isDirectory(p);
 
-                // Wir entscheiden die Farbe basierend auf dem Typ
-                Vector4f color = isDir ?
-                        new Vector4f(0.2f, 0.4f, 0.8f, 1.0f) : // Blau für Ordner
-                        new Vector4f(0.5f, 0.5f, 0.5f, 1.0f);  // Grau für Dateien
+                Vector4f color = isDir ? new Vector4f(0.2f, 0.4f, 0.8f, 1.0f) :
+                        new Vector4f(0.5f, 0.5f, 0.5f, 1.0f);
 
-                // Erstelle die Node (Größe z.B. 150x50)
                 if (isDir) {
-                    nodes.add(new Directory(name, currentX[0], currentY[0], color, new HashMap<>()));
+                    try {
+                        Directory subDir = new Directory(name, currentX[0], currentY[0], color, current);
+                        current.children.add(subDir);
+
+                        if (recursionState < 0) {
+                            getDirectories(subDir, p.toString(), recursionState + 1);
+                        }
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                 } else {
-                    nodes.add(new Node(name, currentX[0], currentY[0], color));
+                    current.children.add(new Node(name, currentX[0], currentY[0], color, current));
                 }
 
-                // Simples Layout: Untereinander stapeln
-                // (Später kannst du hier ein Grid-System bauen)
-                // currentY += 50 + spacing;
-
-                // Oder Nebeneinander:
                 currentX[0] += 150 + spacing;
-                if (currentX[0] > 1000) { // Umbruch nach 1000 Pixeln
+                if (currentX[0] > 1000) {
                     currentX[0] = 50;
-                    currentY[0] += 70;
+                    currentY[0] += 150 + spacing;
                 }
             });
         } catch (IOException e) {
-            System.err.println("Fehler beim Lesen des Verzeichnisses: " + e.getMessage());
+            System.err.println("Fehler beim Lesen von " + pathString + ": " + e.getMessage());
         }
-        return nodes;
+        return current;
+    }
+
+    public String getPath(Node pos) {
+        ArrayList<String> parts = new ArrayList<>();
+        Node cur = pos;
+        while (cur != null) {
+            String name = cur.name;
+            if (name != null && !name.equals("/") && !name.isBlank()) {
+                parts.add(name);
+            }
+            cur = cur.parent;
+        }
+        StringBuilder sb = new StringBuilder("/");
+        for (int i = parts.size() - 1; i >= 0; i--) {
+            sb.append(parts.get(i));
+            if (i != 0) sb.append("/");
+        }
+        return sb.toString();
     }
 }

@@ -1,6 +1,7 @@
 package dj;
 
 import dj.filesystem.Node;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
@@ -15,6 +16,8 @@ import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Gui {
     private final String title = "Vertex NodeExplorer";
+    long handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
+    long arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
     Controller ct;
     Camera camera;
     double lastMouseX = 0;
@@ -23,6 +26,7 @@ public class Gui {
     private int width = 1280;
     private int height = 720;
     private boolean leftMouseButtonPressed = false;
+    private boolean isControllPressed = false;
 
     public Gui(Controller ct) {
         this.ct = ct;
@@ -95,6 +99,15 @@ public class Gui {
             }
         });
 
+        glfwSetScrollCallback(window, (w, xOffset, yOffset) -> {
+                    if (isControllPressed) {
+                        camera.zoom *= yOffset > 0 ? 1.02f : 0.98f;
+                    } else {
+                        camera.y -= (float) yOffset * 20;
+                    }
+                }
+        );
+
         glfwMakeContextCurrent(window);
         // activate V Sync
         glfwSwapInterval(1);
@@ -155,9 +168,10 @@ public class Gui {
             glScalef(camera.zoom, camera.zoom, 1.0f);
             glTranslatef(-camera.x, -camera.y, 0);
 
-            for (Node n : ct.nodes) {
+            for (Node n : ct.root.children){
                 n.printSelf();
             }
+
             glPopMatrix();
 
             nvgBeginFrame(nvg, width, height, 1.0f);
@@ -167,9 +181,11 @@ public class Gui {
             nvgScale(nvg, camera.zoom, camera.zoom);
             nvgTranslate(nvg, -camera.x, -camera.y);
 
-            for (Node n : ct.nodes) {
+            for (Node n : ct.root.children){
                 n.printSelfText(nvg);
             }
+
+
             nvgRestore(nvg);
             nvgEndFrame(nvg);
 
@@ -182,15 +198,17 @@ public class Gui {
     }
 
     private void handleInput() {
-        // TODO: make movement with mouse
         float speed = 5.0f / camera.zoom;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.y -= speed;
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.y += speed;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.x -= speed;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.x += speed;
 
-        // Zoom mit Q und E
+        // Zoom with Q and E
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.zoom *= 1.02f;
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.zoom /= 1.02f;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) isControllPressed = true;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) isControllPressed = false;
+
     }
 }
