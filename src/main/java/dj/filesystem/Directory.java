@@ -15,8 +15,8 @@ import static org.lwjgl.nanovg.NanoVG.*;
 public class Directory extends Node {
     public ArrayList<Node> children = new ArrayList<>();
 
-    public Directory(String name, float x, float y, Vector4f color, Node parent) {
-        super(name, x, y, color, parent);
+    public Directory(String name, float x, float y, Vector4f color, Node parent, boolean isParent) {
+        super(name, x, y, color, parent, isParent);
     }
 
     public void printChildren(long nvg, int screenWidth, int screenHeight) {
@@ -30,8 +30,8 @@ public class Directory extends Node {
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             float angle = startAngle + (i * angleStep);
-            child.x = (float) (this.x + orbitRadius * Math.cos(angle));
-            child.y = (float) (this.y + orbitRadius * Math.sin(angle));
+            child.targetX = (float) (this.x + orbitRadius * Math.cos(angle));
+            child.targetY = (float) (this.y + orbitRadius * Math.sin(angle));
             drawLine(nvg, this.x, this.y, child.x, child.y);
             child.printSelf(nvg, screenWidth, screenHeight);
         }
@@ -50,6 +50,7 @@ public class Directory extends Node {
 
     @Override
     public void printSelf(long nvg, int width, int height) {
+        moveTargetPos();
         printChildren(nvg, width, height);
         printAtPos(nvg, x, y, radius);
         super.printSelfText(nvg);
@@ -59,7 +60,7 @@ public class Directory extends Node {
         float dxSelf = mouseWorldX - this.x;
         float dySelf = mouseWorldY - this.y;
         if ((dxSelf * dxSelf) + (dySelf * dySelf) <= (this.radius * this.radius)) {
-            return parent;
+            return this;
         }
 
         for (Node n : children) {

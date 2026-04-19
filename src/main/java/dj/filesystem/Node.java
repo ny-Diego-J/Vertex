@@ -11,17 +11,22 @@ public class Node {
     private static final NVGColor textColor = NVGColor.create();
     public String name;
     public float x, y;
+    public double targetX, targetY;
     float radius = 25.0f;
     private Vector4f color;
     Node parent;
+    boolean isParent;
 
-    public Node(String name, float x, float y, Vector4f color, Node parent) {
+    public Node(String name, float x, float y, Vector4f color, Node parent, boolean isParent) {
         this.name = name;
         this.x = x;
         this.y = y;
+        this.targetX = x;
+        this.targetY = y;
         this.color = color;
         this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
         this.parent = parent;
+        this.isParent = isParent;
     }
 
     public void printSelfText(long nvg) {
@@ -39,7 +44,23 @@ public class Node {
         nvgFill(nvg);
     }
 
+    public void moveTargetPos() {
+        float leapSpeed = 0.01f;
+
+        double dx = targetX - x;
+        double dy = targetY - y;
+
+        if (Math.abs(dx) < 0.5f && Math.abs(dy) < 0.5f) {
+            x = (float) targetX;
+            y = (float) targetY;
+            return;
+        }
+        x += (float) (dx * leapSpeed);
+        y += (float) (dy * leapSpeed);
+    }
+
     public void printSelf(long nvg, int width, int height) {
+        moveTargetPos();
         printAtPos(nvg, x, y, radius);
         printSelfText(nvg);
     }

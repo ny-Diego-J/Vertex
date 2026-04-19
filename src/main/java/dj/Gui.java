@@ -81,17 +81,17 @@ public class Gui {
             glViewport(0, 0, newWidth, newHeight);
         });
 
-        glfwSetCursorPosCallback(window, (windowHandle, xPos, yPos) -> {
-            if (leftMouseButtonPressed) {
-                double diffX = xPos - lastMouseX;
-                double diffY = yPos - lastMouseY;
-
-                camera.x -= (float) (diffX / camera.zoom);
-                camera.y -= (float) (diffY / camera.zoom);
-            }
-            lastMouseX = xPos;
-            lastMouseY = yPos;
-        });
+//        glfwSetCursorPosCallback(window, (windowHandle, xPos, yPos) -> {
+//            if (leftMouseButtonPressed) {
+//                double diffX = xPos - lastMouseX;
+//                double diffY = yPos - lastMouseY;
+//
+//                camera.x -= (float) (diffX / camera.zoom);
+//                camera.y -= (float) (diffY / camera.zoom);
+//            }
+//            lastMouseX = xPos;
+//            lastMouseY = yPos;
+//        });
 
         glfwSetMouseButtonCallback(window, (windowHandle, button, action, mods) -> {
             if (button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -187,22 +187,32 @@ public class Gui {
             float mouseWorldX = (float) ((rawMouseX[0] - centerX) / camera.zoom + camera.x);
             float mouseWorldY = (float) ((rawMouseY[0] - centerY) / camera.zoom + camera.y);
 
+            Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
             if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
 
-                Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
 
                 if (clicked != null) {
-                    if (clicked instanceof Directory && clicked != ct.currentDir) {
-                        Directory nextDir = (Directory) clicked;
+                    if (clicked != ct.currentDir) {
+                        if (clicked instanceof Directory) {
+                            Directory nextDir = (Directory) clicked;
 
-                        nextDir.x = 0;
-                        nextDir.y = 0;
+                            nextDir.x = 0;
+                            nextDir.y = 0;
 
-                        ct.setCurrentDir(nextDir);
-                        ct.reloadCurrentDir();
-                        System.out.println("navigate to: " + nextDir.name);
-                    } else {
-                        ct.dr.openFile(clicked);
+                            ct.setCurrentDir(nextDir);
+                            ct.reloadCurrentDir();
+                            System.out.println("navigate to: " + nextDir.name);
+                        } else {
+                            ct.dr.openFile(clicked);
+                        }
+                    }
+                }
+            } else if (leftMouseButtonPressed && wasLeftMouseButtonPressed) {
+                if (clicked != null) {
+                    if (clicked == ct.currentDir) {
+
+                        ct.currentDir.x = mouseWorldX;
+                        ct.currentDir.y = mouseWorldY;
                     }
                 }
             }
