@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import static dj.Gui.window;
+import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Directory extends Node {
@@ -35,7 +37,7 @@ public class Directory extends Node {
         }
     }
 
-    private void drawLine(long nvg, float startX, float startY, float endX, float endY){
+    private void drawLine(long nvg, float startX, float startY, float endX, float endY) {
         nvgBeginPath(nvg);
         NanoVG.nvgMoveTo(nvg, startX, startY);
         NanoVG.nvgLineTo(nvg, endX, endY);
@@ -51,5 +53,28 @@ public class Directory extends Node {
         printChildren(nvg, width, height);
         printAtPos(nvg, x, y, radius);
         super.printSelfText(nvg);
+    }
+
+    public Node getClickedNode(float mouseWorldX, float mouseWorldY) {
+        float dxSelf = mouseWorldX - this.x;
+        float dySelf = mouseWorldY - this.y;
+        if ((dxSelf * dxSelf) + (dySelf * dySelf) <= (this.radius * this.radius)) {
+            return parent;
+        }
+
+        for (Node n : children) {
+            float dx = mouseWorldX - n.x;
+            float dy = mouseWorldY - n.y;
+
+            float distanceSquared = (dx * dx) + (dy * dy);
+            float radiusSquared = n.radius * n.radius;
+
+            if (distanceSquared <= radiusSquared) {
+                return n;
+            }
+        }
+
+
+        return null;
     }
 }

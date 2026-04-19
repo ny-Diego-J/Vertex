@@ -9,8 +9,8 @@ import static org.lwjgl.nanovg.NanoVG.*;
 public class Node {
     private float fontSize = 20.0f;
     private static final NVGColor textColor = NVGColor.create();
-    String name;
-    float x, y;
+    public String name;
+    public float x, y;
     float radius = 25.0f;
     private Vector4f color;
     Node parent;

@@ -23,11 +23,14 @@ public class Gui {
     Camera camera;
     double lastMouseX = 0;
     double lastMouseY = 0;
-    private long window;
+    public static long window;
     private int width = 1280;
     private int height = 720;
     private boolean leftMouseButtonPressed = false;
+    private boolean wasLeftMouseButtonPressed = false;
     private boolean isControllPressed = false;
+    public int[] winWidth = new int[1];
+    public int[] winHeight = new int[1];
 
     public Gui(Controller ct) {
         this.ct = ct;
@@ -145,8 +148,7 @@ public class Gui {
 
             int[] fbWidth = new int[1];
             int[] fbHeight = new int[1];
-            int[] winWidth = new int[1];
-            int[] winHeight = new int[1];
+
 
             glfwGetFramebufferSize(window, fbWidth, fbHeight);
 
@@ -177,8 +179,34 @@ public class Gui {
             nvgScale(nvg, camera.zoom, camera.zoom);
             nvgTranslate(nvg, -camera.x, -camera.y);
 
-            ct.root.printSelf(nvg, winWidth[0], winHeight[0]);
+            ct.currentDir.printSelf(nvg, winWidth[0], winHeight[0]);
+            double[] rawMouseX = {0};
+            double[] rawMouseY = {0};
+            glfwGetCursorPos(window, rawMouseX, rawMouseY);
 
+            float mouseWorldX = (float) ((rawMouseX[0] - centerX) / camera.zoom + camera.x);
+            float mouseWorldY = (float) ((rawMouseY[0] - centerY) / camera.zoom + camera.y);
+
+            if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
+
+                Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
+
+                if (clicked != null) {
+                    if (clicked instanceof Directory && clicked != ct.currentDir) {
+                        Directory nextDir = (Directory) clicked;
+
+                        nextDir.x = 0;
+                        nextDir.y = 0;
+
+                        ct.setCurrentDir(nextDir);
+                        ct.reloadCurrentDir();
+                        System.out.println("navigate to: " + nextDir.name);
+                    } else {
+                        ct.dr.openFile(clicked);
+                    }
+                }
+            }
+            wasLeftMouseButtonPressed = leftMouseButtonPressed;
             nvgRestore(nvg);
             nvgEndFrame(nvg);
 
@@ -196,7 +224,8 @@ public class Gui {
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.y += speed;
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.x -= speed;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.x += speed;
-        if (glfwGetKey(window,GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) ct.reloadFiles();
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+            ct.reloadRoot();
 
         // Zoom with Q and E
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.zoom *= 1.02f;

@@ -2,6 +2,7 @@ package dj.filesystem;
 
 import org.joml.Vector4f;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
@@ -24,6 +25,11 @@ public class DirReader {
             stream.forEach(p -> {
                 String name = p.getFileName().toString();
                 boolean isDir = Files.isDirectory(p);
+                try {
+                    if (Files.isHidden(p)) return;
+                } catch (IOException e) {
+                }
+
 
                 Vector4f color = isDir ? new Vector4f(0.2f, 0.4f, 0.8f, 1.0f) :
                         new Vector4f(0.5f, 0.5f, 0.5f, 1.0f);
@@ -33,7 +39,7 @@ public class DirReader {
                         Directory subDir = new Directory(name, currentX[0], currentY[0], color, current);
                         current.children.add(subDir);
 
-                        if (recursionState < 1) {
+                        if (recursionState < 0) {
                             getDirectories(subDir, p.toString(), recursionState + 1);
                         }
                     } catch (IOException e) {
@@ -58,6 +64,7 @@ public class DirReader {
     public String getPath(Node pos) {
         ArrayList<String> parts = new ArrayList<>();
         Node cur = pos;
+
         while (cur != null) {
             String name = cur.name;
             if (name != null && !name.equals("/") && !name.isBlank()) {
@@ -65,11 +72,32 @@ public class DirReader {
             }
             cur = cur.parent;
         }
-        StringBuilder sb = new StringBuilder("/");
+        StringBuilder sb = new StringBuilder();
         for (int i = parts.size() - 1; i >= 0; i--) {
             sb.append(parts.get(i));
             if (i != 0) sb.append("/");
         }
+
         return sb.toString();
+    }
+
+    public void openFile(Node node) {
+        if (Desktop.isDesktopSupported()) {
+            try {
+                String fullPath = getPath(node);
+                File fileToOpen = new File(fullPath);
+
+                if (fileToOpen.exists()) {
+                    Desktop.getDesktop().open(fileToOpen);
+                    System.out.println("opened file: " + fileToOpen.getName());
+                } else {
+                    System.err.println("Error: File does not exist");
+                }
+            } catch (IOException e) {
+                System.err.println("Error: failed to open file: " + e.getMessage());
+            }
+        } else {
+            System.err.println("Error: desktop not supported");
+        }
     }
 }
