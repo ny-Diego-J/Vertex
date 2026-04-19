@@ -212,7 +212,10 @@ public class Gui {
                     if (clicked == ct.currentDir) {
 
                         ct.currentDir.x = mouseWorldX;
+                        ct.currentDir.targetX = mouseWorldX;
                         ct.currentDir.y = mouseWorldY;
+                        ct.currentDir.targetY = mouseWorldY;
+
                     }
                 }
             }

@@ -26,7 +26,7 @@ public class Directory extends Node {
         float cy = screenHeight / 2.0f;
         float startAngle = (float) (-Math.PI / 2.0);
         float angleStep = (float) (2 * Math.PI / children.size());
-        float orbitRadius = 200.0f;
+        float orbitRadius = 500.0f;
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             float angle = startAngle + (i * angleStep);
