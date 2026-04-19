@@ -14,8 +14,7 @@ public class DirReader {
 
     public Directory getDirectories(Directory current, String pathString, int recursionState) throws IOException {
         Path path = Paths.get(pathString);
-
-        if (current.children == null) current.children = new ArrayList<>();
+        current.children = new ArrayList<>();
 
         try (Stream<Path> stream = Files.list(path)) {
             final float[] currentX = {50};
