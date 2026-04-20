@@ -29,8 +29,8 @@ public class DirReader {
                 }
 
 
-                Vector4f color = isDir ? new Vector4f(0.2f, 0.4f, 0.8f, 1.0f) :
-                        new Vector4f(0.5f, 0.5f, 0.5f, 1.0f);
+                Vector4f color = isDir ? new Vector4f(0.2f, 0.4f, 0.8f, 0.8f) :
+                        new Vector4f(0.5f, 0.5f, 0.5f, 0.8f);
 
                 if (isDir) {
                     try {
@@ -64,11 +64,11 @@ public class DirReader {
         Node cur = pos;
 
         while (cur != null) {
-            String name = cur.name;
+            String name = cur.getName();
             if (name != null && !name.equals("/") && !name.isBlank()) {
                 parts.add(name);
             }
-            cur = cur.parent;
+            cur = cur.getParent();
         }
         StringBuilder sb = new StringBuilder();
         for (int i = parts.size() - 1; i >= 0; i--) {

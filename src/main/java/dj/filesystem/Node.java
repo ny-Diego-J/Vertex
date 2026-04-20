@@ -8,14 +8,14 @@ import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
     private static final NVGColor textColor = NVGColor.create();
-    public String name;
-    public float x, y;
-    public double targetX, targetY;
-    public float vx = 0.0f;
-    public float vy = 0.0f;
-    public Directory parent;
-    public boolean isParent;
-    float radius = 25.0f;
+    protected float x, y;
+    protected double targetX, targetY;
+    protected float vx = 0.0f;
+    protected float vy = 0.0f;
+    protected boolean isParent;
+    protected float radius = 25.0f;
+    private String name;
+    private Directory parent;
     private float fontSize;
     private Vector4f color;
 
@@ -81,4 +81,69 @@ public class Node {
         nvgRGBAf(color.x, color.y, color.z, color.w, textColor);
         return textColor;
     }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public float getX() {
+        return x;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
+        return y;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public void setTargetX(double targetX) {
+        this.targetX = targetX;
+    }
+
+    public void setTargetY(double targetY) {
+        this.targetY = targetY;
+    }
+
+    public float getVx() {
+        return vx;
+    }
+
+    public void setVx(float vx) {
+        this.vx = vx;
+    }
+
+    public float getVy() {
+        return vy;
+    }
+
+    public void setVy(float vy) {
+        this.vy = vy;
+    }
+
+    public Directory getParent() {
+        return parent;
+    }
+
+    public void setIfParent(boolean parent) {
+        isParent = parent;
+    }
+
+    public float getRadius() {
+        return radius;
+    }
+
+    public void setRadius(float radius) {
+        this.radius = radius;
+    }
+
 }

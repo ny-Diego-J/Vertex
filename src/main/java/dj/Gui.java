@@ -16,18 +16,19 @@ import static org.lwjgl.nanovg.NanoVGGL3.*;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Gui {
-    public static long window;
-    public static boolean leftMouseButtonPressed = false;
-    public static boolean rightMouseButtonPressed = false;
+    private static long window;
+    private boolean leftMouseButtonPressed = false;
+    private boolean rightMouseButtonPressed = false;
     private final String title = "Vertex NodeExplorer";
-    public int[] winWidth = new int[1];
-    public int[] winHeight = new int[1];
+    private int[] winWidth = new int[1];
+    private int[] winHeight = new int[1];
+    //TODO: animate cursor
     long handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
     long arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
-    Controller ct;
-    Camera camera;
-    double lastMouseX = 0;
-    double lastMouseY = 0;
+    private Controller ct;
+    private Camera camera;
+    private double lastMouseX = 0;
+    private double lastMouseY = 0;
     private int width = 1280;
     private int height = 720;
     private boolean wasLeftMouseButtonPressed = false;
@@ -197,10 +198,10 @@ public class Gui {
 
             if (isDragging) {
                 if (leftMouseButtonPressed) {
-                    ct.currentDir.x = mouseWorldX;
-                    ct.currentDir.targetX = mouseWorldX;
-                    ct.currentDir.y = mouseWorldY;
-                    ct.currentDir.targetY = mouseWorldY;
+                    ct.currentDir.setX(mouseWorldX);
+                    ct.currentDir.setTargetX(mouseWorldX);
+                    ct.currentDir.setY(mouseWorldY);
+                    ct.currentDir.setTargetY(mouseWorldY);
                 } else isDragging = false;
             } else {
 
@@ -212,34 +213,34 @@ public class Gui {
                             if (clicked instanceof Directory) {
                                 Directory nextDir = (Directory) clicked;
 
-                                nextDir.x = 0;
-                                nextDir.y = 0;
+                                nextDir.setX(0);
+                                nextDir.setY(0);
 
                                 ct.setCurrentDir(nextDir);
                                 ct.reloadCurrentDir();
-                                System.out.println("navigate to: " + nextDir.name);
+                                System.out.println("navigate to: " + nextDir.getName());
                             } else {
                                 ct.dr.openFile(clicked);
                             }
                         }
                     } else if (leftMouseButtonPressed && wasLeftMouseButtonPressed) {
                         if (clicked == ct.currentDir) {
-                            ct.currentDir.x = mouseWorldX;
-                            ct.currentDir.targetX = mouseWorldX;
-                            ct.currentDir.y = mouseWorldY;
-                            ct.currentDir.targetY = mouseWorldY;
+                            ct.currentDir.setX(mouseWorldX);
+                            ct.currentDir.setTargetX(mouseWorldX);
+                            ct.currentDir.setY(mouseWorldY);
+                            ct.currentDir.setTargetY(mouseWorldY);
                             isDragging = true;
                         }
                     } else if (rightMouseButtonPressed && !wasRightMouseButtonPressed) {
-                        if (clicked == ct.currentDir && clicked.parent != null) {
-                            Directory nextDir = clicked.parent;
+                        if (clicked == ct.currentDir && clicked.getParent() != null) {
+                            Directory nextDir = clicked.getParent();
 
-                            nextDir.x = 0;
-                            nextDir.y = 0;
+                            nextDir.setX(0);
+                            nextDir.setY(0);
 
                             ct.setCurrentDir(nextDir);
                             ct.reloadCurrentDir();
-                            System.out.println("navigate to parent directory: " + nextDir.name);
+                            System.out.println("navigate to parent directory: " + nextDir.getName());
                         }
                     }
                 }

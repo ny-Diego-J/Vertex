@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Directory extends Node {
-    public ArrayList<Node> children = new ArrayList<>();
+    protected ArrayList<Node> children = new ArrayList<>();
 
     public Directory(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         super(name, x, y, color, parent, isParent);

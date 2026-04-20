@@ -19,8 +19,8 @@ public class Controller {
 
     public void reloadRoot() {
         try {
-            root = new Directory("C:\\", 0, 0, new Vector4f(1, 0, 0, 1), null, true);
-            root = dr.getDirectories(root, "C:\\", 0);
+            root = new Directory("c:\\", 0, 0, new Vector4f(1, 0, 0, 1), null, true);
+            root = dr.getDirectories(root, root.getName(), 0);
             currentDir = root;
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -29,9 +29,9 @@ public class Controller {
 
     public void reloadCurrentDir() {
         try {
-            currentDir.isParent = false;
+            currentDir.setIfParent(false);
             currentDir = dr.getDirectories(currentDir, dr.getPath(currentDir), 0);
-            currentDir.isParent = true;
+            currentDir.setIfParent(true);
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
