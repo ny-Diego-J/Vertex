@@ -48,9 +48,8 @@ public class Directory extends Node {
         nvgBeginPath(nvg);
         NanoVG.nvgMoveTo(nvg, startX, startY);
         NanoVG.nvgLineTo(nvg, endX, endY);
-        NVGColor lineColor = NVGColor.create();
-        nvgRGBAf(1, 1, 1, 1, lineColor);
-        NanoVG.nvgStrokeColor(nvg, lineColor);
+        nvgRGBAf(1, 1, 1, 1, Node.sharedColor);
+        NanoVG.nvgStrokeColor(nvg, Node.sharedColor);
         NanoVG.nvgStrokeWidth(nvg, 2.0f);
         NanoVG.nvgStroke(nvg);
     }

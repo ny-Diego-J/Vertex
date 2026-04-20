@@ -81,10 +81,9 @@ public class Node {
     }
 
     public NVGColor getColor() {
-        NVGColor textColor = NVGColor.create();
-        if (isParent) nvgRGBAf(1, 0, 0, 1, textColor);
-        else nvgRGBAf(color.x, color.y, color.z, color.w, textColor);
-        return textColor;
+        if (isParent) nvgRGBAf(1, 0, 0, 1, sharedColor);
+        else nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);
+        return sharedColor;
     }
 
     public String getName() {

@@ -82,8 +82,6 @@ public class Gui {
         });
 
         glfwSetCursorPosCallback(window, (windowHandle, xPos, yPos) -> {
-            mouseX = xPos;
-            mouseY = yPos;
             if (rightMouseButtonPressed) {
                 double diffX = xPos - lastMouseX;
                 double diffY = yPos - lastMouseY;
@@ -148,6 +146,8 @@ public class Gui {
         if (font == -1) {
             System.err.println("Warnung: Font konnte nicht geladen werden. Text wird nicht angezeigt.");
         }
+        double[] rawMouseX = {0};
+        double[] rawMouseY = {0};
 
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -188,8 +188,7 @@ public class Gui {
             glfwSetWindowTitle(window, title + " - " + ct.currentDir.getName());
 
             ct.currentDir.printSelf(nvg, winWidth[0], winHeight[0], camera);
-            double[] rawMouseX = {0};
-            double[] rawMouseY = {0};
+
             glfwGetCursorPos(window, rawMouseX, rawMouseY);
 
             float mouseWorldX = (float) ((rawMouseX[0] - centerX) / camera.zoom + camera.x);
