@@ -1,5 +1,6 @@
 package dj.filesystem;
 
+import dj.Camera;
 import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
@@ -7,17 +8,20 @@ import org.lwjgl.nanovg.NanoVG;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
+    protected static final NVGColor sharedColor = NVGColor.create();
     private static final NVGColor textColor = NVGColor.create();
+    private final Directory parent;
+    private final float fontSize;
+    private final Vector4f color;
+    public double moveAngle = Math.random() * 360;
     protected float x, y;
     protected double targetX, targetY;
     protected float vx = 0.0f;
     protected float vy = 0.0f;
     protected boolean isParent;
     protected float radius = 25.0f;
+    protected double moveSpeed = 0.1;
     private String name;
-    private Directory parent;
-    private float fontSize;
-    private Vector4f color;
 
     public Node(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.name = name;
@@ -70,7 +74,7 @@ public class Node {
         }
     }
 
-    public void printSelf(long nvg, int width, int height) {
+    public void printSelf(long nvg, int width, int height, Camera camera) {
         moveTargetPos();
         printAtPos(nvg, x, y, radius);
         printSelfText(nvg);
@@ -107,14 +111,6 @@ public class Node {
         this.y = y;
     }
 
-    public void setTargetX(double targetX) {
-        this.targetX = targetX;
-    }
-
-    public void setTargetY(double targetY) {
-        this.targetY = targetY;
-    }
-
     public float getVx() {
         return vx;
     }
@@ -145,6 +141,22 @@ public class Node {
 
     public void setRadius(float radius) {
         this.radius = radius;
+    }
+
+    public double getTargetX() {
+        return targetX;
+    }
+
+    public void setTargetX(double targetX) {
+        this.targetX = targetX;
+    }
+
+    public double getTargetY() {
+        return targetY;
+    }
+
+    public void setTargetY(double targetY) {
+        this.targetY = targetY;
     }
 
 }

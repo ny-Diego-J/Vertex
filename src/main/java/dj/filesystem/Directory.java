@@ -1,5 +1,6 @@
 package dj.filesystem;
 
+import dj.Camera;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.nanovg.NVGColor;
@@ -23,6 +24,7 @@ public class Directory extends Node {
         float startAngle = (float) (-Math.PI / 2.0);
         float angleStep = (float) (2 * Math.PI / children.size());
         float orbitRadius = 200.0f;
+        if (children.size() > 20) orbitRadius = 250;
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             float angle = startAngle + (i * angleStep);
@@ -54,11 +56,52 @@ public class Directory extends Node {
     }
 
     @Override
-    public void printSelf(long nvg, int width, int height) {
+    public void printSelf(long nvg, int width, int height, Camera camera) {
         moveTargetPos();
         printChildren(nvg);
         printAtPos(nvg, x, y, radius);
+        if (isParent) moveRoot(width, height, camera);
         super.printSelfText(nvg);
+    }
+
+    private void moveRoot(int width, int height, Camera camera) {
+        double radians = Math.toRadians(moveAngle);
+        double dx = moveSpeed * Math.cos(radians);
+        double dy = moveSpeed * Math.sin(radians);
+
+        double nextX = targetX + dx;
+        double nextY = targetY + dy;
+
+        float centerX = width / 2.0f;
+        float centerY = height / 2.0f;
+
+        double visibleLeft = (0 - centerX) / camera.zoom + camera.x;
+        double visibleRight = (width - centerX) / camera.zoom + camera.x;
+
+        double visibleTop = (0 - centerY) / camera.zoom + camera.y;
+        double visibleBottom = (height - centerY) / camera.zoom + camera.y;
+
+        double minX = visibleLeft + radius;
+        double maxX = visibleRight - radius;
+
+        double minY = visibleTop + radius;
+        double maxY = visibleBottom - radius;
+
+
+        if (nextX <= minX || nextX >= maxX) {
+            dx = -dx;
+            moveAngle = moveAngle > 180 ? -moveAngle + 540 : -moveAngle + 180;
+        }
+
+        if (nextY <= minY || nextY >= maxY) {
+            dy = -dy;
+            moveAngle = 360 - moveAngle;
+        }
+
+        moveAngle = (moveAngle % 360 + 360) % 360;
+
+        targetX += dx;
+        targetY += dy;
     }
 
     public Node getClickedNode(float mouseWorldX, float mouseWorldY) {

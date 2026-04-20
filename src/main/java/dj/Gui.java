@@ -19,20 +19,20 @@ public class Gui {
     public static long window;
     public static long handCursor;
     public static long arrowCursor;
-    private final String title = "Vertex NodeExplorer";
+    private final String title = "Vertex";
+    private final int[] winWidth = new int[1];
+    private final int[] winHeight = new int[1];
+    private final Controller ct;
+    private final Camera camera;
     private boolean leftMouseButtonPressed = false;
     private boolean rightMouseButtonPressed = false;
-    private int[] winWidth = new int[1];
-    private int[] winHeight = new int[1];
-    private Controller ct;
-    private Camera camera;
     private double lastMouseX = 0;
     private double lastMouseY = 0;
     private int width = 1280;
     private int height = 720;
     private boolean wasLeftMouseButtonPressed = false;
     private boolean wasRightMouseButtonPressed = false;
-    private boolean isControllPressed = false;
+    private boolean isControlPressed = false;
     private boolean isDragging = false;
 
     public Gui(Controller ct) {
@@ -45,8 +45,9 @@ public class Gui {
         loop();
 
         // Cleanup after close
-        glfwTerminate();
         GLFW.glfwDestroyCursor(arrowCursor);
+        GLFW.glfwDestroyCursor(handCursor);
+        glfwTerminate();
         glfwSetErrorCallback(null).free();
     }
 
@@ -73,13 +74,6 @@ public class Gui {
             throw new RuntimeException("Window could not be created");
         }
 
-        // currently closes on esc release
-        glfwSetKeyCallback(window, (window, key, scancode, action, mods) -> {
-            if (key == GLFW_KEY_ESCAPE && action == GLFW_RELEASE) {
-                glfwSetWindowShouldClose(window, true);
-            }
-        });
-
         glfwSetFramebufferSizeCallback(window, (windowHandle, newWidth, newHeight) -> {
             this.width = newWidth;
             this.height = newHeight;
@@ -88,6 +82,8 @@ public class Gui {
         });
 
         glfwSetCursorPosCallback(window, (windowHandle, xPos, yPos) -> {
+            mouseX = xPos;
+            mouseY = yPos;
             if (rightMouseButtonPressed) {
                 double diffX = xPos - lastMouseX;
                 double diffY = yPos - lastMouseY;
@@ -95,8 +91,6 @@ public class Gui {
                 camera.x -= (float) (diffX / camera.zoom);
                 camera.y -= (float) (diffY / camera.zoom);
             }
-            lastMouseX = xPos;
-            lastMouseY = yPos;
         });
 
         glfwSetMouseButtonCallback(window, (windowHandle, button, action, mods) -> {
@@ -117,7 +111,7 @@ public class Gui {
         });
 
         glfwSetScrollCallback(window, (w, xOffset, yOffset) -> {
-                    if (isControllPressed) {
+                    if (isControlPressed) {
                         camera.zoom *= yOffset > 0 ? 1.02f : 0.98f;
                     } else {
                         camera.y -= (float) yOffset * 20;
@@ -127,6 +121,7 @@ public class Gui {
 
         glfwMakeContextCurrent(window);
         // activate V Sync
+        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICS CARD WILL GO WROOOOOOM
         glfwSwapInterval(1);
 
         glfwShowWindow(window);
@@ -190,7 +185,9 @@ public class Gui {
             nvgScale(nvg, camera.zoom, camera.zoom);
             nvgTranslate(nvg, -camera.x, -camera.y);
 
-            ct.currentDir.printSelf(nvg, winWidth[0], winHeight[0]);
+            glfwSetWindowTitle(window, title + " - " + ct.currentDir.getName());
+
+            ct.currentDir.printSelf(nvg, winWidth[0], winHeight[0], camera);
             double[] rawMouseX = {0};
             double[] rawMouseY = {0};
             glfwGetCursorPos(window, rawMouseX, rawMouseY);
@@ -204,9 +201,17 @@ public class Gui {
                     ct.currentDir.setTargetX(mouseWorldX);
                     ct.currentDir.setY(mouseWorldY);
                     ct.currentDir.setTargetY(mouseWorldY);
-                } else isDragging = false;
-            } else {
+                } else {
+                    double dx = rawMouseX[0] - lastMouseX;
+                    double dy = rawMouseY[0] - lastMouseY;
 
+                    if (Math.abs(dx) > 0.1 || Math.abs(dy) > 0.1) {
+                        double angle = Math.toDegrees(Math.atan2(dy, dx));
+                        ct.currentDir.moveAngle = angle;
+                    }
+                    isDragging = false;
+                }
+            } else {
                 Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
                 if (clicked != null) {
                     if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
@@ -214,16 +219,11 @@ public class Gui {
                             System.out.println("sub");
                             if (clicked instanceof Directory) {
                                 Directory nextDir = (Directory) clicked;
-
-                                nextDir.setX(0);
-                                nextDir.setY(0);
-
-                                ct.setCurrentDir(nextDir);
-                                ct.reloadCurrentDir();
-                                System.out.println("navigate to: " + nextDir.getName());
+                                updateCurrentDir(nextDir);
                             } else {
                                 ct.dr.openFile(clicked);
                             }
+                        } else {
                         }
                     } else if (leftMouseButtonPressed && wasLeftMouseButtonPressed) {
                         if (clicked == ct.currentDir) {
@@ -236,12 +236,7 @@ public class Gui {
                     } else if (rightMouseButtonPressed && !wasRightMouseButtonPressed) {
                         if (clicked == ct.currentDir && clicked.getParent() != null) {
                             Directory nextDir = clicked.getParent();
-
-                            nextDir.setX(0);
-                            nextDir.setY(0);
-
-                            ct.setCurrentDir(nextDir);
-                            ct.reloadCurrentDir();
+                            updateCurrentDir(nextDir);
                             System.out.println("navigate to parent directory: " + nextDir.getName());
                         }
                     }
@@ -249,6 +244,8 @@ public class Gui {
             }
             wasLeftMouseButtonPressed = leftMouseButtonPressed;
             wasRightMouseButtonPressed = rightMouseButtonPressed;
+            lastMouseX = rawMouseX[0];
+            lastMouseY = rawMouseY[0];
             nvgRestore(nvg);
             nvgEndFrame(nvg);
 
@@ -258,6 +255,17 @@ public class Gui {
         }
 
         nvgDelete(nvg);
+    }
+
+    private void updateCurrentDir(Directory newDir) {
+        newDir.setX(0);
+        newDir.setY(0);
+        ct.setCurrentDir(newDir);
+        ct.reloadCurrentDir();
+        ct.currentDir.setTargetX(0);
+        ct.currentDir.setTargetY(0);
+        camera.x = 0;
+        camera.y = 0;
     }
 
     private void handleInput() {
@@ -272,8 +280,8 @@ public class Gui {
         // Zoom with Q and E
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.zoom *= 1.02f;
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.zoom /= 1.02f;
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) isControllPressed = true;
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) isControllPressed = false;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) isControlPressed = true;
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) isControlPressed = false;
 
     }
 }

@@ -1,8 +1,8 @@
 package dj;
 
 public class Camera {
-    protected float x, y;
-    protected float zoom = 1.5f;
+    public float x, y;
+    public float zoom = 1.5f;
 
     public Camera(float x, float y) {
         this.x = x;
