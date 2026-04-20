@@ -3,10 +3,13 @@ package dj.filesystem;
 import dj.Camera;
 import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
-import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
+import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 import static dj.Gui.*;
 import static org.lwjgl.nanovg.NanoVG.*;
@@ -128,55 +131,72 @@ public class Directory extends Node {
         return null;
     }
 
-    private void applyRepulsion() {
+
+    private void checkCollisions(Node n1, Node n2) {
         float repulsionStrength = 0.08f;
         float minDistance = 65.0f;
+        float dx = n2.x - n1.x;
+        float dy = n2.y - n1.y;
+
+        float distSq = (dx * dx) + (dy * dy);
+
+        if (distSq < (minDistance * minDistance) && distSq > 0.001f) {
+            float distance = (float) Math.sqrt(distSq);
+
+            float overlap = minDistance - distance;
+
+            float nx = dx / distance;
+            float ny = dy / distance;
+
+            float forceX = nx * overlap * repulsionStrength;
+            float forceY = ny * overlap * repulsionStrength;
+
+            if (n1 == this) {
+                n2.vx += forceX * 2;
+                n2.vy += forceY * 2;
+
+            } else if (n2 == this) {
+                n1.vx -= forceX * 2;
+                n1.vy -= forceY * 2;
+            } else {
+                n1.vx -= forceX;
+                n1.vy -= forceY;
+
+                n2.vx += forceX;
+                n2.vy += forceY;
+            }
+        }
+    }
+
+    private void applyRepulsion() {
+        int cellSize = 100;
+        HashMap<String, List<Node>> grid = new HashMap<>();
+        for (Node node : children) {
+            int gridX = Math.floorDiv((int) node.x, cellSize);
+            int gridY = Math.floorDiv((int) node.y, cellSize);
+            grid.computeIfAbsent(gridX + "," + gridY, k -> new ArrayList<>()).add(node);
+        }
+        int parentX = Math.floorDiv((int) this.x, cellSize);
+        int parentY = Math.floorDiv((int) this.y, cellSize);
+        grid.computeIfAbsent(parentX + "," + parentY, k -> new ArrayList<>()).add(this);
 
 
-        for (int i = 0; i < children.size(); i++) {
-            Node n1 = children.get(i);
+        for (Node node : children) {
+            int myGridX = Math.floorDiv((int) node.x, cellSize);
+            int myGridY = Math.floorDiv((int) node.y, cellSize);
 
-            for (int j = i + 1; j < children.size(); j++) {
-                Node n2 = children.get(j);
+            for (int offsetX = -1; offsetX <= 1; offsetX++) {
+                for (int offsetY = -1; offsetY <= 1; offsetY++) {
+                    String neighborKey = (myGridX + offsetX) + "," + (myGridY + offsetY);
+                    List<Node> neighbors = grid.getOrDefault(neighborKey, Collections.emptyList());
 
-                float dx = n2.x - n1.x;
-                float dy = n2.y - n1.y;
-                float rootDx = this.x - n1.x;
-                float rootDy = this.y - n1.y;
-
-                float distSq = (dx * dx) + (dy * dy);
-                float rootDistSq = (rootDx * rootDx) + (rootDy * rootDy);
-
-                if (distSq < (minDistance * minDistance) && distSq > 0.001f) {
-                    float distance = (float) Math.sqrt(distSq);
-
-                    float overlap = minDistance - distance;
-
-                    float nx = dx / distance;
-                    float ny = dy / distance;
-
-                    float forceX = nx * overlap * repulsionStrength;
-                    float forceY = ny * overlap * repulsionStrength;
-
-                    n1.vx -= forceX;
-                    n1.vy -= forceY;
-
-                    n2.vx += forceX;
-                    n2.vy += forceY;
-                }
-                if (rootDistSq < (minDistance * minDistance) && rootDistSq > 0.001f) {
-                    float distance = (float) Math.sqrt(rootDistSq);
-
-                    float overlap = minDistance - distance;
-
-                    float nx = rootDx / distance;
-                    float ny = rootDy / distance;
-
-                    float forceX = nx * overlap * repulsionStrength;
-                    float forceY = ny * overlap * repulsionStrength;
-
-                    n1.vx -= forceX;
-                    n1.vy -= forceY;
+                    for (Node potentialCollider : neighbors) {
+                        if (potentialCollider != node) {
+                            if (System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
+                                checkCollisions(node, potentialCollider);
+                            }
+                        }
+                    }
                 }
             }
         }
