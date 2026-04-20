@@ -149,8 +149,18 @@ public class Gui {
         double[] rawMouseX = {0};
         double[] rawMouseY = {0};
 
+        long lastTime = System.nanoTime();
+        int frames = 0;
+
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+            frames++;
+            if (System.nanoTime() - lastTime >= 1_000_000_000) {
+                System.out.println("FPS: " + frames);
+                frames = 0;
+                lastTime = System.nanoTime();
+            }
 
 //            int[] fbWidth = new int[1];
 //            int[] fbHeight = new int[1];
