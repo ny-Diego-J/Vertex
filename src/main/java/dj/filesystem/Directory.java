@@ -1,11 +1,13 @@
 package dj.filesystem;
 
 import org.joml.Vector4f;
+import org.lwjgl.glfw.GLFW;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
 import java.util.ArrayList;
 
+import static dj.Gui.*;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Directory extends Node {
@@ -15,7 +17,7 @@ public class Directory extends Node {
         super(name, x, y, color, parent, isParent);
     }
 
-    public void printChildren(long nvg, int screenWidth, int screenHeight) {
+    public void printChildren(long nvg) {
         if (children.isEmpty()) return;
         applyRepulsion();
         float startAngle = (float) (-Math.PI / 2.0);
@@ -31,6 +33,10 @@ public class Directory extends Node {
 
         }
         for (Node n : children) {
+            if (n instanceof Directory) {
+                Directory n1 = (Directory) n;
+                n1.printChildren(nvg);
+            }
             n.printAtPos(nvg, n.x, n.y, n.radius);
             n.printSelfText(nvg);
         }
@@ -50,7 +56,7 @@ public class Directory extends Node {
     @Override
     public void printSelf(long nvg, int width, int height) {
         moveTargetPos();
-        if (isParent) printChildren(nvg, width, height);
+        printChildren(nvg);
         printAtPos(nvg, x, y, radius);
         super.printSelfText(nvg);
     }
@@ -59,6 +65,7 @@ public class Directory extends Node {
         float dxSelf = mouseWorldX - this.x;
         float dySelf = mouseWorldY - this.y;
         if ((dxSelf * dxSelf) + (dySelf * dySelf) <= (this.radius * this.radius)) {
+            GLFW.glfwSetCursor(window, handCursor);
             return this;
 
         }
@@ -71,11 +78,11 @@ public class Directory extends Node {
             float radiusSquared = n.radius * n.radius;
 
             if (distanceSquared <= radiusSquared) {
+                GLFW.glfwSetCursor(window, handCursor);
                 return n;
             }
         }
-
-
+        GLFW.glfwSetCursor(window, arrowCursor);
         return null;
     }
 

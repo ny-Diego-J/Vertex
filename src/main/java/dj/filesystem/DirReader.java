@@ -16,9 +16,6 @@ public class DirReader {
         current.children = new ArrayList<>();
 
         try (Stream<Path> stream = Files.list(path)) {
-            final float[] currentX = {50};
-            final float[] currentY = {50};
-            float spacing = 20;
 
             stream.forEach(p -> {
                 String name = p.getFileName().toString();
@@ -45,12 +42,6 @@ public class DirReader {
                     }
                 } else {
                     current.children.add(new Node(name, current.x, current.y, color, current, false));
-                }
-
-                currentX[0] += 150 + spacing;
-                if (currentX[0] > 1000) {
-                    currentX[0] = 50;
-                    currentY[0] += 150 + spacing;
                 }
             });
         } catch (IOException e) {

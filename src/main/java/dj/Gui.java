@@ -16,15 +16,14 @@ import static org.lwjgl.nanovg.NanoVGGL3.*;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Gui {
-    private static long window;
+    public static long window;
+    public static long handCursor;
+    public static long arrowCursor;
+    private final String title = "Vertex NodeExplorer";
     private boolean leftMouseButtonPressed = false;
     private boolean rightMouseButtonPressed = false;
-    private final String title = "Vertex NodeExplorer";
     private int[] winWidth = new int[1];
     private int[] winHeight = new int[1];
-    //TODO: animate cursor
-    long handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
-    long arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
     private Controller ct;
     private Camera camera;
     private double lastMouseX = 0;
@@ -47,6 +46,7 @@ public class Gui {
 
         // Cleanup after close
         glfwTerminate();
+        GLFW.glfwDestroyCursor(arrowCursor);
         glfwSetErrorCallback(null).free();
     }
 
@@ -58,6 +58,8 @@ public class Gui {
         if (!glfwInit()) {
             throw new IllegalStateException("GLFW could not get loadet");
         }
+        handCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_HAND_CURSOR);
+        arrowCursor = GLFW.glfwCreateStandardCursor(GLFW.GLFW_ARROW_CURSOR);
 
         // window config (Hints)
         glfwDefaultWindowHints();
@@ -155,15 +157,15 @@ public class Gui {
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-            int[] fbWidth = new int[1];
-            int[] fbHeight = new int[1];
+//            int[] fbWidth = new int[1];
+//            int[] fbHeight = new int[1];
 
 
-            glfwGetFramebufferSize(window, fbWidth, fbHeight);
+//            glfwGetFramebufferSize(window, fbWidth, fbHeight);
 
             glfwGetWindowSize(window, winWidth, winHeight);
 
-            float pxRatio = (float) fbWidth[0] / (float) winWidth[0];
+//            float pxRatio = (float) fbWidth[0] / (float) winWidth[0];
 
             glMatrixMode(GL_PROJECTION);
             glLoadIdentity();

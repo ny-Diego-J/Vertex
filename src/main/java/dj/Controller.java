@@ -5,10 +5,10 @@ import dj.filesystem.Directory;
 import org.joml.Vector4f;
 
 public class Controller {
-    Directory root;
-    Directory currentDir;
-    DirReader dr = new DirReader();
-    Gui gui;
+    protected Directory currentDir;
+    protected DirReader dr = new DirReader();
+    private Directory root;
+    private Gui gui;
 
 
     public void run() {
