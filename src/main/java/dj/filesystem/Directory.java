@@ -5,11 +5,6 @@ import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import static dj.Gui.window;
-import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Directory extends Node {
@@ -22,11 +17,9 @@ public class Directory extends Node {
     public void printChildren(long nvg, int screenWidth, int screenHeight) {
         if (children.isEmpty()) return;
 
-        float cx = screenWidth / 2.0f;
-        float cy = screenHeight / 2.0f;
         float startAngle = (float) (-Math.PI / 2.0);
         float angleStep = (float) (2 * Math.PI / children.size());
-        float orbitRadius = 500.0f;
+        float orbitRadius = 200.0f;
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             float angle = startAngle + (i * angleStep);
@@ -60,7 +53,8 @@ public class Directory extends Node {
         float dxSelf = mouseWorldX - this.x;
         float dySelf = mouseWorldY - this.y;
         if ((dxSelf * dxSelf) + (dySelf * dySelf) <= (this.radius * this.radius)) {
-            return this;
+            return parent;
+
         }
 
         for (Node n : children) {

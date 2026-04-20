@@ -7,14 +7,14 @@ import org.lwjgl.nanovg.NanoVG;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
-    private float fontSize = 20.0f;
+    private float fontSize;
     private static final NVGColor textColor = NVGColor.create();
     public String name;
     public float x, y;
     public double targetX, targetY;
     float radius = 25.0f;
     private Vector4f color;
-    Node parent;
+    public Node parent;
     boolean isParent;
 
     public Node(String name, float x, float y, Vector4f color, Node parent, boolean isParent) {
@@ -45,7 +45,7 @@ public class Node {
     }
 
     public void moveTargetPos() {
-        float leapSpeed = 0.01f;
+        float leapSpeed = 0.05f;
 
         double dx = targetX - x;
         double dy = targetY - y;
