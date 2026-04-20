@@ -7,17 +7,19 @@ import org.lwjgl.nanovg.NanoVG;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
-    private float fontSize;
     private static final NVGColor textColor = NVGColor.create();
     public String name;
     public float x, y;
     public double targetX, targetY;
+    public float vx = 0.0f;
+    public float vy = 0.0f;
+    public Directory parent;
+    public boolean isParent;
     float radius = 25.0f;
+    private float fontSize;
     private Vector4f color;
-    public Node parent;
-    boolean isParent;
 
-    public Node(String name, float x, float y, Vector4f color, Node parent, boolean isParent) {
+    public Node(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.name = name;
         this.x = x;
         this.y = y;
@@ -45,18 +47,27 @@ public class Node {
     }
 
     public void moveTargetPos() {
-        float leapSpeed = 0.05f;
+        float tension = 0.045f;
+        float dampening = 0.85f;
 
         double dx = targetX - x;
         double dy = targetY - y;
 
-        if (Math.abs(dx) < 0.5f && Math.abs(dy) < 0.5f) {
+        vx += (float) (dx * tension);
+        vy += (float) (dy * tension);
+
+        vx *= dampening;
+        vy *= dampening;
+
+        x += vx;
+        y += vy;
+
+        if (Math.abs(dx) < 0.5f && Math.abs(dy) < 0.5f && Math.abs(vx) < 0.1f && Math.abs(vy) < 0.1f) {
             x = (float) targetX;
             y = (float) targetY;
-            return;
+            vx = 0f;
+            vy = 0f;
         }
-        x += (float) (dx * leapSpeed);
-        y += (float) (dy * leapSpeed);
     }
 
     public void printSelf(long nvg, int width, int height) {

@@ -5,18 +5,19 @@ import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
 import java.util.ArrayList;
+
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Directory extends Node {
     public ArrayList<Node> children = new ArrayList<>();
 
-    public Directory(String name, float x, float y, Vector4f color, Node parent, boolean isParent) {
+    public Directory(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         super(name, x, y, color, parent, isParent);
     }
 
     public void printChildren(long nvg, int screenWidth, int screenHeight) {
         if (children.isEmpty()) return;
-
+        applyRepulsion();
         float startAngle = (float) (-Math.PI / 2.0);
         float angleStep = (float) (2 * Math.PI / children.size());
         float orbitRadius = 200.0f;
@@ -25,8 +26,13 @@ public class Directory extends Node {
             float angle = startAngle + (i * angleStep);
             child.targetX = (float) (this.x + orbitRadius * Math.cos(angle));
             child.targetY = (float) (this.y + orbitRadius * Math.sin(angle));
+            child.moveTargetPos();
             drawLine(nvg, this.x, this.y, child.x, child.y);
-            child.printSelf(nvg, screenWidth, screenHeight);
+
+        }
+        for (Node n : children) {
+            n.printAtPos(nvg, n.x, n.y, n.radius);
+            n.printSelfText(nvg);
         }
     }
 
@@ -44,7 +50,7 @@ public class Directory extends Node {
     @Override
     public void printSelf(long nvg, int width, int height) {
         moveTargetPos();
-        printChildren(nvg, width, height);
+        if (isParent) printChildren(nvg, width, height);
         printAtPos(nvg, x, y, radius);
         super.printSelfText(nvg);
     }
@@ -53,7 +59,7 @@ public class Directory extends Node {
         float dxSelf = mouseWorldX - this.x;
         float dySelf = mouseWorldY - this.y;
         if ((dxSelf * dxSelf) + (dySelf * dySelf) <= (this.radius * this.radius)) {
-            return parent;
+            return this;
 
         }
 
@@ -71,5 +77,59 @@ public class Directory extends Node {
 
 
         return null;
+    }
+
+    private void applyRepulsion() {
+        float repulsionStrength = 0.08f;
+        float minDistance = 65.0f;
+
+
+        for (int i = 0; i < children.size(); i++) {
+            Node n1 = children.get(i);
+
+            for (int j = i + 1; j < children.size(); j++) {
+                Node n2 = children.get(j);
+
+                float dx = n2.x - n1.x;
+                float dy = n2.y - n1.y;
+                float rootDx = this.x - n1.x;
+                float rootDy = this.y - n1.y;
+
+                float distSq = (dx * dx) + (dy * dy);
+                float rootDistSq = (rootDx * rootDx) + (rootDy * rootDy);
+
+                if (distSq < (minDistance * minDistance) && distSq > 0.001f) {
+                    float distance = (float) Math.sqrt(distSq);
+
+                    float overlap = minDistance - distance;
+
+                    float nx = dx / distance;
+                    float ny = dy / distance;
+
+                    float forceX = nx * overlap * repulsionStrength;
+                    float forceY = ny * overlap * repulsionStrength;
+
+                    n1.vx -= forceX;
+                    n1.vy -= forceY;
+
+                    n2.vx += forceX;
+                    n2.vy += forceY;
+                }
+                if (rootDistSq < (minDistance * minDistance) && rootDistSq > 0.001f) {
+                    float distance = (float) Math.sqrt(rootDistSq);
+
+                    float overlap = minDistance - distance;
+
+                    float nx = rootDx / distance;
+                    float ny = rootDy / distance;
+
+                    float forceX = nx * overlap * repulsionStrength;
+                    float forceY = ny * overlap * repulsionStrength;
+
+                    n1.vx -= forceX;
+                    n1.vy -= forceY;
+                }
+            }
+        }
     }
 }

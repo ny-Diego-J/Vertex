@@ -34,7 +34,7 @@ public class DirReader {
 
                 if (isDir) {
                     try {
-                        Directory subDir = new Directory(name, currentX[0], currentY[0], color, current, false);
+                        Directory subDir = new Directory(name, current.x, current.y, color, current, false);
                         current.children.add(subDir);
 
                         if (recursionState < 0) {
@@ -44,7 +44,7 @@ public class DirReader {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    current.children.add(new Node(name, currentX[0], currentY[0], color, current, false));
+                    current.children.add(new Node(name, current.x, current.y, color, current, false));
                 }
 
                 currentX[0] += 150 + spacing;

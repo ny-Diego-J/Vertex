@@ -20,7 +20,6 @@ public class Controller {
     public void reloadRoot() {
         try {
             root = new Directory("C:\\", 0, 0, new Vector4f(1, 0, 0, 1), null, true);
-            root.parent = root;
             root = dr.getDirectories(root, "C:\\", 0);
             currentDir = root;
         } catch (Exception e) {
@@ -30,7 +29,9 @@ public class Controller {
 
     public void reloadCurrentDir() {
         try {
+            currentDir.isParent = false;
             currentDir = dr.getDirectories(currentDir, dr.getPath(currentDir), 0);
+            currentDir.isParent = true;
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }

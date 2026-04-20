@@ -33,6 +33,7 @@ public class Gui {
     private boolean wasLeftMouseButtonPressed = false;
     private boolean wasRightMouseButtonPressed = false;
     private boolean isControllPressed = false;
+    private boolean isDragging = false;
 
     public Gui(Controller ct) {
         this.ct = ct;
@@ -140,13 +141,11 @@ public class Gui {
     }
 
     private void loop() {
-        // 1. NanoVG Initialisierung (einmalig vor dem Loop)
         long nvg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (nvg == 0) {
             throw new RuntimeException("NanoVG konnte nicht initialisiert werden!");
         }
 
-        // Pfad zur Font-Datei (Stelle sicher, dass die Datei dort liegt!)
         int font = nvgCreateFont(nvg, "jbm", "src/main/resources/fonts/jbm.ttf");
         if (font == -1) {
             System.err.println("Warnung: Font konnte nicht geladen werden. Text wird nicht angezeigt.");
@@ -196,41 +195,52 @@ public class Gui {
             float mouseWorldX = (float) ((rawMouseX[0] - centerX) / camera.zoom + camera.x);
             float mouseWorldY = (float) ((rawMouseY[0] - centerY) / camera.zoom + camera.y);
 
-            Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
-            if (clicked != null) {
-                if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
-                    if (clicked != ct.currentDir && clicked != ct.currentDir.parent) {
-                        System.out.println("sub");
-                        if (clicked instanceof Directory) {
-                            Directory nextDir = (Directory) clicked;
+            if (isDragging) {
+                if (leftMouseButtonPressed) {
+                    ct.currentDir.x = mouseWorldX;
+                    ct.currentDir.targetX = mouseWorldX;
+                    ct.currentDir.y = mouseWorldY;
+                    ct.currentDir.targetY = mouseWorldY;
+                } else isDragging = false;
+            } else {
+
+                Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
+                if (clicked != null) {
+                    if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
+                        if (clicked != ct.currentDir) {
+                            System.out.println("sub");
+                            if (clicked instanceof Directory) {
+                                Directory nextDir = (Directory) clicked;
+
+                                nextDir.x = 0;
+                                nextDir.y = 0;
+
+                                ct.setCurrentDir(nextDir);
+                                ct.reloadCurrentDir();
+                                System.out.println("navigate to: " + nextDir.name);
+                            } else {
+                                ct.dr.openFile(clicked);
+                            }
+                        }
+                    } else if (leftMouseButtonPressed && wasLeftMouseButtonPressed) {
+                        if (clicked == ct.currentDir) {
+                            ct.currentDir.x = mouseWorldX;
+                            ct.currentDir.targetX = mouseWorldX;
+                            ct.currentDir.y = mouseWorldY;
+                            ct.currentDir.targetY = mouseWorldY;
+                            isDragging = true;
+                        }
+                    } else if (rightMouseButtonPressed && !wasRightMouseButtonPressed) {
+                        if (clicked == ct.currentDir && clicked.parent != null) {
+                            Directory nextDir = clicked.parent;
 
                             nextDir.x = 0;
                             nextDir.y = 0;
 
                             ct.setCurrentDir(nextDir);
                             ct.reloadCurrentDir();
-                            System.out.println("navigate to: " + nextDir.name);
-                        } else {
-                            ct.dr.openFile(clicked);
+                            System.out.println("navigate to parent directory: " + nextDir.name);
                         }
-                    }
-                } else if (leftMouseButtonPressed && wasLeftMouseButtonPressed) {
-                    if (clicked == ct.currentDir.parent) {
-                        ct.currentDir.x = mouseWorldX;
-                        ct.currentDir.targetX = mouseWorldX;
-                        ct.currentDir.y = mouseWorldY;
-                        ct.currentDir.targetY = mouseWorldY;
-                    }
-                } else if (rightMouseButtonPressed && !wasRightMouseButtonPressed && clicked == ct.currentDir.parent) {
-                    if (ct.currentDir != ct.currentDir.parent) {
-                        Directory nextDir = (Directory) clicked;
-
-                        nextDir.x = 0;
-                        nextDir.y = 0;
-
-                        ct.setCurrentDir(nextDir);
-                        ct.reloadCurrentDir();
-                        System.out.println("navigate to parent directory: " + nextDir.name);
                     }
                 }
             }
