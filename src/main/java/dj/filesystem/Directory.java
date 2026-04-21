@@ -22,11 +22,13 @@ public class Directory extends Node {
      * sets the target position for all children and also draws them
      */
     public void printChildren(long nvg) {
-        if (children.isEmpty()) return;
+        if (children.isEmpty())
+            return;
         float startAngle = (float) (-Math.PI / 2.0);
         float angleStep = (float) (2 * Math.PI / children.size());
         float orbitRadius = 200.0f;
-        if (children.size() > 20) orbitRadius = 250;
+        if (children.size() > 20)
+            orbitRadius = 250;
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             float angle = startAngle + (i * angleStep);
@@ -43,16 +45,17 @@ public class Directory extends Node {
             n.printAtPos(nvg, n.x, n.y, n.radius);
             n.printSelfText(nvg);
         }
-        applyRepulsion();
+        applyRepulsion(nvg);
 
     }
 
     /**
      * Draws a line from a start point to the end point
+     *
      * @param startX starting x position
      * @param startY starting y position
-     * @param endX ending x position
-     * @param endY ending y position
+     * @param endX   ending x position
+     * @param endY   ending y position
      */
     private void drawLine(long nvg, float startX, float startY, float endX, float endY) {
         nvgBeginPath(nvg);
@@ -65,12 +68,12 @@ public class Directory extends Node {
     }
 
     private void printIdleChildren(long nvg, int width, int height, Camera camera) {
-        if (children.isEmpty()) return;
+        if (children.isEmpty())
+            return;
 
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             child.moveSelf(width, height, camera);
-            drawLine(nvg, this.x, this.y, child.x, child.y);
 
             if (child instanceof Directory childDir) {
                 childDir.printIdleChildren(nvg, width, height, camera);
@@ -80,13 +83,14 @@ public class Directory extends Node {
             child.printSelfText(nvg);
         }
 
-        applyRepulsion();
+        applyRepulsion(nvg);
     }
 
     /**
      * prints the directory itself and everything that comes with it
-     * @param nvg nvg
-     * @param width current window width
+     *
+     * @param nvg    nvg
+     * @param width  current window width
      * @param height current window height
      * @param camera the camera
      */
@@ -98,13 +102,15 @@ public class Directory extends Node {
         } else {
             printChildren(nvg);
         }
-        if (isParent) moveSelf(width, height, camera);
+        if (isParent)
+            moveSelf(width, height, camera);
         printAtPos(nvg, x, y, radius);
         printSelfText(nvg);
     }
 
     /**
      * returns the node that is currently hovered over
+     *
      * @param mouseWorldX mouse x position
      * @param mouseWorldY mouse y position
      * @return hovered node
@@ -134,9 +140,9 @@ public class Directory extends Node {
         return null;
     }
 
-
     /**
-     * NORMAL STATE: Wendet eine weiche Abstoßungskraft an, damit Nodes nicht ineinander hängen.
+     * NORMAL STATE: Wendet eine weiche Abstoßungskraft an, damit Nodes nicht
+     * ineinander hängen.
      */
     private void checkNormalCollision(Node n1, Node n2) {
         float minDistance = 65.0f;
@@ -171,7 +177,7 @@ public class Directory extends Node {
     }
 
     /**
-     * IDLE STATE: Harter Abprall wie bei Billardkugeln (Crisp & Clean)
+     * IDLE STATE: Harter Abprall wie bei Billardkugeln
      */
     private void checkIdleCollision(Node n1, Node n2) {
         float minDistance = n1.getRadius() + n2.getRadius();
@@ -190,16 +196,6 @@ public class Directory extends Node {
             float sepX = nx * (overlap / 2.0f);
             float sepY = ny * (overlap / 2.0f);
 
-            n1.x -= sepX;
-            n1.targetX -= sepX;
-            n1.y -= sepY;
-            n1.targetY -= sepY;
-
-            n2.x += sepX;
-            n2.targetX += sepX;
-            n2.y += sepY;
-            n2.targetY += sepY;
-
             double v1x = Math.cos(Math.toRadians(n1.moveAngle));
             double v1y = Math.sin(Math.toRadians(n1.moveAngle));
             double v2x = Math.cos(Math.toRadians(n2.moveAngle));
@@ -214,13 +210,23 @@ public class Directory extends Node {
                 reflectNodeAngle(n1, nx, ny);
                 reflectNodeAngle(n2, nx, ny);
             }
+            n1.x -= sepX;
+            n1.targetX -= sepX;
+            n1.y -= sepY;
+            n1.targetY -= sepY;
+
+            n2.x += sepX;
+            n2.targetX += sepX;
+            n2.y += sepY;
+            n2.targetY += sepY;
+
         }
     }
 
-
     /**
-     * makes a hashmap out of all children and the Directory itself
-     * The primary key is the cell and the other value is the node
+     * makes a hashmap out of all children and the Directory itself The primary
+     * key is the cell and the other value is the node
+     *
      * @param cellSize grid size
      * @return hashmap with all children
      */
@@ -257,15 +263,21 @@ public class Directory extends Node {
 
     /**
      * checks for all nodes if the collision has been checkt and if not check it
-     * @param node node to check the collisions with
+     *
+     * @param node      node to check the collisions with
      * @param neighbors all possible neighbors
      */
-    private void checkPotentialColliders(Node node, List<Node> neighbors) {
+    private void checkPotentialColliders(Node node, List<Node> neighbors, long nvg) {
         for (Node potentialCollider : neighbors) {
-            if (potentialCollider != node && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
+            if (potentialCollider != node
+                    && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
                 if (isIdleState) {
+
+                    if (node == this)
+                        drawLine(nvg, node.x, node.y, potentialCollider.x, potentialCollider.y);
                     checkIdleCollision(node, potentialCollider);
                 } else {
+
                     checkNormalCollision(node, potentialCollider);
                 }
             }
@@ -275,8 +287,8 @@ public class Directory extends Node {
     /**
      * checks all collisions for every Node in their directory
      */
-    private void applyRepulsion() {
-        int cellSize = 200;
+    private void applyRepulsion(long nvg) {
+        int cellSize = 100;
         List<Node> allNodesToUpdate = new ArrayList<>(children);
         allNodesToUpdate.add(this);
 
@@ -288,7 +300,7 @@ public class Directory extends Node {
                 for (int offsetY = -1; offsetY <= 1; offsetY++) {
                     String neighborKey = (myGridX + offsetX) + "," + (myGridY + offsetY);
                     List<Node> neighbors = grid.getOrDefault(neighborKey, Collections.emptyList());
-                    checkPotentialColliders(node, neighbors);
+                    checkPotentialColliders(node, neighbors, nvg);
                 }
             }
         }

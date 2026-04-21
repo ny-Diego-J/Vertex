@@ -4,8 +4,6 @@ import dj.filesystem.DirReader;
 import dj.filesystem.Directory;
 import org.joml.Vector4f;
 
-import java.util.Timer;
-
 public class Controller {
     private final int TIME = 60;
     protected Directory currentDir;
