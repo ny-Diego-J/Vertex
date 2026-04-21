@@ -5,8 +5,6 @@ import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
 import org.lwjgl.nanovg.NanoVG;
 
-import java.util.List;
-
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
@@ -22,7 +20,7 @@ public class Node {
     protected float vy = 0.0f;
     protected boolean isParent;
     protected float radius = 25.0f;
-    protected double moveSpeed = 0.1;
+    protected double moveSpeed = 0.05;
     private String name;
 
     public Node(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
@@ -74,12 +72,6 @@ public class Node {
             vx = 0f;
             vy = 0f;
         }
-    }
-
-    public void printSelf(long nvg, int width, int height, Camera camera) {
-        moveTargetPos();
-        printAtPos(nvg, x, y, radius);
-        printSelfText(nvg);
     }
 
     public NVGColor getColor() {

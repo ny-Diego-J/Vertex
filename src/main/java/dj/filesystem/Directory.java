@@ -23,7 +23,6 @@ public class Directory extends Node {
 
     public void printChildren(long nvg) {
         if (children.isEmpty()) return;
-        applyRepulsion();
         float startAngle = (float) (-Math.PI / 2.0);
         float angleStep = (float) (2 * Math.PI / children.size());
         float orbitRadius = 200.0f;
@@ -45,6 +44,8 @@ public class Directory extends Node {
             n.printAtPos(nvg, n.x, n.y, n.radius);
             n.printSelfText(nvg);
         }
+        applyRepulsion();
+
     }
 
     private void drawLine(long nvg, float startX, float startY, float endX, float endY) {
@@ -57,7 +58,6 @@ public class Directory extends Node {
         NanoVG.nvgStroke(nvg);
     }
 
-    @Override
     public void printSelf(long nvg, int width, int height, Camera camera) {
         moveTargetPos();
         printChildren(nvg);
@@ -133,7 +133,7 @@ public class Directory extends Node {
 
 
     private void checkCollisions(Node n1, Node n2) {
-        float repulsionStrength = 0.08f;
+        float repulsionStrength = 0.1f;
         float minDistance = 65.0f;
         float dx = n2.x - n1.x;
         float dy = n2.y - n1.y;
@@ -152,12 +152,12 @@ public class Directory extends Node {
             float forceY = ny * overlap * repulsionStrength;
 
             if (n1 == this) {
-                n2.vx += forceX * 2;
-                n2.vy += forceY * 2;
+                n2.vx += forceX * 20;
+                n2.vy += forceY * 20;
 
             } else if (n2 == this) {
-                n1.vx -= forceX * 2;
-                n1.vy -= forceY * 2;
+                n1.vx -= forceX * 20;
+                n1.vy -= forceY * 20;
             } else {
                 n1.vx -= forceX;
                 n1.vy -= forceY;
@@ -168,8 +168,8 @@ public class Directory extends Node {
         }
     }
 
-    private void applyRepulsion() {
-        int cellSize = 100;
+
+    private HashMap<String, List<Node>> getCellList(int cellSize) {
         HashMap<String, List<Node>> grid = new HashMap<>();
         for (Node node : children) {
             int gridX = Math.floorDiv((int) node.x, cellSize);
@@ -179,24 +179,31 @@ public class Directory extends Node {
         int parentX = Math.floorDiv((int) this.x, cellSize);
         int parentY = Math.floorDiv((int) this.y, cellSize);
         grid.computeIfAbsent(parentX + "," + parentY, k -> new ArrayList<>()).add(this);
+        return grid;
+    }
 
+    private void checkPotentialColliders(Node node, List<Node> neighbors) {
+        for (Node potentialCollider : neighbors) {
+            if (potentialCollider != node) {
+                if (System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
+                    checkCollisions(node, potentialCollider);
+                }
+            }
+        }
+    }
 
+    private void applyRepulsion() {
+        int cellSize = 200;
+
+        HashMap<String, List<Node>> grid = getCellList(cellSize);
         for (Node node : children) {
             int myGridX = Math.floorDiv((int) node.x, cellSize);
             int myGridY = Math.floorDiv((int) node.y, cellSize);
-
             for (int offsetX = -1; offsetX <= 1; offsetX++) {
                 for (int offsetY = -1; offsetY <= 1; offsetY++) {
                     String neighborKey = (myGridX + offsetX) + "," + (myGridY + offsetY);
                     List<Node> neighbors = grid.getOrDefault(neighborKey, Collections.emptyList());
-
-                    for (Node potentialCollider : neighbors) {
-                        if (potentialCollider != node) {
-                            if (System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
-                                checkCollisions(node, potentialCollider);
-                            }
-                        }
-                    }
+                    checkPotentialColliders(node, neighbors);
                 }
             }
         }
