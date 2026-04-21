@@ -53,24 +53,6 @@ public class Directory extends Node {
 
     }
 
-    /**
-     * Draws a line from a start point to the end point
-     *
-     * @param startX starting x position
-     * @param startY starting y position
-     * @param endX ending x position
-     * @param endY ending y position
-     */
-    private void drawLine(long nvg, float startX, float startY, float endX, float endY) {
-        nvgBeginPath(nvg);
-        NanoVG.nvgMoveTo(nvg, startX, startY);
-        NanoVG.nvgLineTo(nvg, endX, endY);
-        nvgRGBAf(1, 1, 1, 1, Node.sharedColor);
-        NanoVG.nvgStrokeColor(nvg, Node.sharedColor);
-        NanoVG.nvgStrokeWidth(nvg, 2.0f);
-        NanoVG.nvgStroke(nvg);
-    }
-
     private void printIdleChildren(long nvg, int width, int height, Camera camera) {
         if (children.isEmpty()) return;
 
@@ -269,13 +251,16 @@ public class Directory extends Node {
      * @param neighbors all possible neighbors
      */
     private void checkPotentialColliders(Node node, List<Node> neighbors, long nvg) {
+        nvgBeginPath(nvg);
         for (Node potentialCollider : neighbors) {
             if (potentialCollider != node
                     && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
                 if (isIdleState) {
 
-                    if (node == this || potentialCollider == this)
-                        drawLine(nvg, node.x, node.y, potentialCollider.x, potentialCollider.y);
+                    if (node == this || potentialCollider == this) {
+                        NanoVG.nvgMoveTo(nvg, node.x, node.y);
+                        NanoVG.nvgLineTo(nvg, potentialCollider.x, potentialCollider.y);
+                    }
                     checkIdleCollision(node, potentialCollider);
                 } else {
 
@@ -283,6 +268,10 @@ public class Directory extends Node {
                 }
             }
         }
+        nvgRGBAf(1, 1, 1, 1, Node.sharedColor);
+        NanoVG.nvgStrokeColor(nvg, Node.sharedColor);
+        NanoVG.nvgStrokeWidth(nvg, 2.0f);
+        NanoVG.nvgStroke(nvg);
     }
 
     /**
