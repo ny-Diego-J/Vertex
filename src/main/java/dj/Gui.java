@@ -6,8 +6,9 @@ import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
+import static org.lwjgl.nanovg.NanoVGGL2.NVG_ANTIALIAS;
+import static org.lwjgl.nanovg.NanoVGGL2.NVG_STENCIL_STROKES;
 import static org.lwjgl.nanovg.NanoVG.nvgCreateFont;
-import static org.lwjgl.nanovg.NanoVGGL2.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.nanovg.NanoVGGL3.*;
@@ -97,6 +98,7 @@ public class Gui {
 
         glfwSetMouseButtonCallback(window, (windowHandle, button, action, mods) -> {
             if (button == GLFW_MOUSE_BUTTON_LEFT) {
+                ct.resetTime();
                 if (action == GLFW_PRESS) {
                     leftMouseButtonPressed = true;
                 } else if (action == GLFW_RELEASE) {
@@ -104,6 +106,7 @@ public class Gui {
                 }
             }
             if (button == GLFW_MOUSE_BUTTON_RIGHT) {
+                ct.resetTime();
                 if (action == GLFW_PRESS) {
                     rightMouseButtonPressed = true;
                 } else if (action == GLFW_RELEASE) {
@@ -113,6 +116,7 @@ public class Gui {
         });
 
         glfwSetScrollCallback(window, (w, xOffset, yOffset) -> {
+                    ct.resetTime();
                     if (isControlPressed) {
                         camera.zoom *= yOffset > 0 ? 1.02f : 0.98f;
                     } else {
@@ -123,7 +127,7 @@ public class Gui {
 
         glfwMakeContextCurrent(window);
         // activate V Sync
-        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICS CARD WILL GO WROOOOOOM
+        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICSCARD WILL GO WROOOOOOOOOOM
         glfwSwapInterval(1);
 
         glfwShowWindow(window);
@@ -293,18 +297,44 @@ public class Gui {
      */
     private void handleInput() {
         float speed = 5.0f / camera.zoom;
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.y -= speed;
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) camera.y += speed;
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.x -= speed;
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.x += speed;
-        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+            camera.y -= speed;
+            ct.resetTime();
+
+        }
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+            camera.y += speed;
+            ct.resetTime();
+
+        }
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+            camera.x -= speed;
+            ct.resetTime();
+        }
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+            camera.x += speed;
+            ct.resetTime();
+        }
+        if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
             ct.reloadCurrentDir();
+            ct.resetTime();
+        }
 
         // Zoom with Q and E
-        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.zoom *= 1.02f;
-        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) camera.zoom /= 1.02f;
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) isControlPressed = true;
-        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) isControlPressed = false;
-
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
+            camera.zoom *= 1.02f;
+            ct.resetTime();
+        }
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
+            camera.zoom /= 1.02f;
+            ct.resetTime();
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
+            isControlPressed = true;
+            ct.resetTime();
+        }
+        if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_RELEASE) {
+            isControlPressed = false;
+        }
     }
 }

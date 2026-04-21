@@ -10,18 +10,19 @@ import static org.lwjgl.nanovg.NanoVG.*;
 public class Node {
     protected static final NVGColor sharedColor = NVGColor.create();
     private static final NVGColor textColor = NVGColor.create();
+    protected static double moveSpeed = 1;
     private final Directory parent;
     private final float fontSize;
     private final Vector4f color;
-    public double moveAngle = Math.random() * 360;
+    public double moveAngle;
     protected float x, y;
     protected double targetX, targetY;
     protected float vx = 0.0f;
     protected float vy = 0.0f;
     protected boolean isParent;
     protected float radius = 25.0f;
-    protected double moveSpeed = 0.05;
     private String name;
+
 
     public Node(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.name = name;
@@ -33,6 +34,53 @@ public class Node {
         this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
         this.parent = parent;
         this.isParent = isParent;
+        this.moveAngle = Math.random() * 360;
+    }
+
+    /**
+     * default movement of the center dot
+     * @param width window width
+     * @param height window height
+     * @param camera current camera
+     */
+    protected void moveSelf(int width, int height, Camera camera) {
+        double radians = Math.toRadians(moveAngle);
+        double dx = moveSpeed * Math.cos(radians);
+        double dy = moveSpeed * Math.sin(radians);
+
+        double nextX = targetX + dx;
+        double nextY = targetY + dy;
+
+        float centerX = width / 2.0f;
+        float centerY = height / 2.0f;
+
+        double visibleLeft = (0 - centerX) / camera.getZoom() + camera.getX();
+        double visibleRight = (width - centerX) / camera.getZoom() + camera.getX();
+
+        double visibleTop = (0 - centerY) / camera.getZoom() + camera.getY();
+        double visibleBottom = (height - centerY) / camera.getZoom() + camera.getY();
+
+        double minX = visibleLeft + radius;
+        double maxX = visibleRight - radius;
+
+        double minY = visibleTop + radius;
+        double maxY = visibleBottom - radius;
+
+
+        if (nextX <= minX || nextX >= maxX) {
+            dx = -dx;
+            moveAngle = moveAngle > 180 ? -moveAngle + 540 : -moveAngle + 180;
+        }
+
+        if (nextY <= minY || nextY >= maxY) {
+            dy = -dy;
+            moveAngle = 360 - moveAngle;
+        }
+
+        moveAngle = (moveAngle % 360 + 360) % 360;
+
+        targetX += dx;
+        targetY += dy;
     }
 
     /**

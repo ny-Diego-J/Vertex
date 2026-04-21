@@ -4,16 +4,20 @@ import dj.filesystem.DirReader;
 import dj.filesystem.Directory;
 import org.joml.Vector4f;
 
+import java.util.Timer;
+
 public class Controller {
+    private final int TIME = 60;
     protected Directory currentDir;
     protected DirReader dr = new DirReader();
     private Directory root;
     private Gui gui;
-
+    private int counter = TIME;
 
     public void run() {
         gui = new Gui(this);
         reloadRoot();
+        initialize();
         gui.run();
     }
 
@@ -45,5 +49,28 @@ public class Controller {
 
     public void setCurrentDir(Directory dir) {
         currentDir = dir;
+    }
+
+    private void initialize() {
+        new Thread(() -> {
+            while (counter >= 0) {
+                try {
+                    Thread.sleep(1000);
+                    counter--;
+                    System.out.println(counter);
+                    if (counter == 0) {
+                        currentDir.setIdleState(true);
+                        counter = TIME;
+                    }
+                } catch (Exception e) {
+                    System.out.println(e.getMessage());
+                }
+            }
+        }).start();
+    }
+
+    public void resetTime() {
+        currentDir.setIdleState(false);
+        counter = TIME;
     }
 }

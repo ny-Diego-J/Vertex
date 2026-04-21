@@ -11,6 +11,7 @@ import static dj.Gui.*;
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Directory extends Node {
+    protected static boolean isIdleState = false;
     protected ArrayList<Node> children = new ArrayList<>();
 
     public Directory(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
@@ -36,8 +37,7 @@ public class Directory extends Node {
 
         }
         for (Node n : children) {
-            if (n instanceof Directory) {
-                Directory n1 = (Directory) n;
+            if (n instanceof Directory n1) {
                 n1.printChildren(nvg);
             }
             n.printAtPos(nvg, n.x, n.y, n.radius);
@@ -64,6 +64,25 @@ public class Directory extends Node {
         NanoVG.nvgStroke(nvg);
     }
 
+    private void printIdleChildren(long nvg, int width, int height, Camera camera) {
+        if (children.isEmpty()) return;
+
+        for (int i = 0; i < children.size(); i++) {
+            Node child = children.get(i);
+            child.moveSelf(width, height, camera);
+            drawLine(nvg, this.x, this.y, child.x, child.y);
+
+            if (child instanceof Directory childDir) {
+                childDir.printIdleChildren(nvg, width, height, camera);
+            }
+            child.moveTargetPos();
+            child.printAtPos(nvg, child.x, child.y, child.radius);
+            child.printSelfText(nvg);
+        }
+
+        applyRepulsion();
+    }
+
     /**
      * prints the directory itself and everything that comes with it
      * @param nvg nvg
@@ -72,57 +91,16 @@ public class Directory extends Node {
      * @param camera the camera
      */
     public void printSelf(long nvg, int width, int height, Camera camera) {
+        moveSpeed = isIdleState ? 1.0f : 0.0f;
         moveTargetPos();
-        printChildren(nvg);
+        if (isIdleState) {
+            printIdleChildren(nvg, width, height, camera);
+        } else {
+            printChildren(nvg);
+        }
+        if (isParent) moveSelf(width, height, camera);
         printAtPos(nvg, x, y, radius);
-        if (isParent) moveRoot(width, height, camera);
-        super.printSelfText(nvg);
-    }
-
-    /**
-     * default movement of the center dot
-     * @param width window width
-     * @param height window height
-     * @param camera current camera
-     */
-    private void moveRoot(int width, int height, Camera camera) {
-        double radians = Math.toRadians(moveAngle);
-        double dx = moveSpeed * Math.cos(radians);
-        double dy = moveSpeed * Math.sin(radians);
-
-        double nextX = targetX + dx;
-        double nextY = targetY + dy;
-
-        float centerX = width / 2.0f;
-        float centerY = height / 2.0f;
-
-        double visibleLeft = (0 - centerX) / camera.getZoom() + camera.getX();
-        double visibleRight = (width - centerX) / camera.getZoom() + camera.getX();
-
-        double visibleTop = (0 - centerY) / camera.getZoom() + camera.getY();
-        double visibleBottom = (height - centerY) / camera.getZoom() + camera.getY();
-
-        double minX = visibleLeft + radius;
-        double maxX = visibleRight - radius;
-
-        double minY = visibleTop + radius;
-        double maxY = visibleBottom - radius;
-
-
-        if (nextX <= minX || nextX >= maxX) {
-            dx = -dx;
-            moveAngle = moveAngle > 180 ? -moveAngle + 540 : -moveAngle + 180;
-        }
-
-        if (nextY <= minY || nextY >= maxY) {
-            dy = -dy;
-            moveAngle = 360 - moveAngle;
-        }
-
-        moveAngle = (moveAngle % 360 + 360) % 360;
-
-        targetX += dx;
-        targetY += dy;
+        printSelfText(nvg);
     }
 
     /**
@@ -158,42 +136,83 @@ public class Directory extends Node {
 
 
     /**
-     * checks the collisions between two nodes and applies repulsion to move them away from each other
-     * @param n1 first node
-     * @param n2 second node
+     * NORMAL STATE: Wendet eine weiche Abstoßungskraft an, damit Nodes nicht ineinander hängen.
      */
-    private void checkCollisions(Node n1, Node n2) {
-        float repulsionStrength = 0.1f;
+    private void checkNormalCollision(Node n1, Node n2) {
         float minDistance = 65.0f;
         float dx = n2.x - n1.x;
         float dy = n2.y - n1.y;
-
         float distSq = (dx * dx) + (dy * dy);
 
         if (distSq < (minDistance * minDistance) && distSq > 0.001f) {
             float distance = (float) Math.sqrt(distSq);
-
             float overlap = minDistance - distance;
 
             float nx = dx / distance;
             float ny = dy / distance;
 
+            float repulsionStrength = 0.1f;
             float forceX = nx * overlap * repulsionStrength;
             float forceY = ny * overlap * repulsionStrength;
 
             if (n1 == this) {
                 n2.vx += forceX * 20;
                 n2.vy += forceY * 20;
-
             } else if (n2 == this) {
                 n1.vx -= forceX * 20;
                 n1.vy -= forceY * 20;
             } else {
                 n1.vx -= forceX;
                 n1.vy -= forceY;
-
                 n2.vx += forceX;
                 n2.vy += forceY;
+            }
+        }
+    }
+
+    /**
+     * IDLE STATE: Harter Abprall wie bei Billardkugeln (Crisp & Clean)
+     */
+    private void checkIdleCollision(Node n1, Node n2) {
+        float minDistance = n1.getRadius() + n2.getRadius();
+
+        float dx = n2.x - n1.x;
+        float dy = n2.y - n1.y;
+        float distSq = (dx * dx) + (dy * dy);
+
+        if (distSq < (minDistance * minDistance) && distSq > 0.001f) {
+            float distance = (float) Math.sqrt(distSq);
+            float overlap = minDistance - distance;
+
+            float nx = dx / distance;
+            float ny = dy / distance;
+
+            float sepX = nx * (overlap / 2.0f);
+            float sepY = ny * (overlap / 2.0f);
+
+            n1.x -= sepX;
+            n1.targetX -= sepX;
+            n1.y -= sepY;
+            n1.targetY -= sepY;
+
+            n2.x += sepX;
+            n2.targetX += sepX;
+            n2.y += sepY;
+            n2.targetY += sepY;
+
+            double v1x = Math.cos(Math.toRadians(n1.moveAngle));
+            double v1y = Math.sin(Math.toRadians(n1.moveAngle));
+            double v2x = Math.cos(Math.toRadians(n2.moveAngle));
+            double v2y = Math.sin(Math.toRadians(n2.moveAngle));
+
+            double relVelX = v2x - v1x;
+            double relVelY = v2y - v1y;
+
+            double velAlongNormal = (relVelX * nx) + (relVelY * ny);
+
+            if (velAlongNormal < 0) {
+                reflectNodeAngle(n1, nx, ny);
+                reflectNodeAngle(n2, nx, ny);
             }
         }
     }
@@ -219,6 +238,24 @@ public class Directory extends Node {
     }
 
     /**
+     * Reflektiert den moveAngle einer Node an der Kollisionsnormalen
+     */
+    private void reflectNodeAngle(Node node, float nx, float ny) {
+        double radians = Math.toRadians(node.moveAngle);
+        double dirX = Math.cos(radians);
+        double dirY = Math.sin(radians);
+
+        double dotProduct = (dirX * nx) + (dirY * ny);
+
+        double rx = dirX - 2 * dotProduct * nx;
+        double ry = dirY - 2 * dotProduct * ny;
+
+        node.moveAngle = Math.toDegrees(Math.atan2(ry, rx));
+
+        node.moveAngle = (node.moveAngle % 360 + 360) % 360;
+    }
+
+    /**
      * checks for all nodes if the collision has been checkt and if not check it
      * @param node node to check the collisions with
      * @param neighbors all possible neighbors
@@ -226,7 +263,11 @@ public class Directory extends Node {
     private void checkPotentialColliders(Node node, List<Node> neighbors) {
         for (Node potentialCollider : neighbors) {
             if (potentialCollider != node && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
-                checkCollisions(node, potentialCollider);
+                if (isIdleState) {
+                    checkIdleCollision(node, potentialCollider);
+                } else {
+                    checkNormalCollision(node, potentialCollider);
+                }
             }
         }
     }
@@ -251,5 +292,9 @@ public class Directory extends Node {
                 }
             }
         }
+    }
+
+    public void setIdleState(boolean idleState) {
+        isIdleState = idleState;
     }
 }
