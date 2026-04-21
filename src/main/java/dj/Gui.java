@@ -116,18 +116,18 @@ public class Gui {
         });
 
         glfwSetScrollCallback(window, (w, xOffset, yOffset) -> {
-                    ct.resetTime();
-                    if (isControlPressed) {
-                        camera.zoom *= yOffset > 0 ? 1.02f : 0.98f;
-                    } else {
-                        camera.y -= (float) yOffset * 20;
-                    }
-                }
-        );
+            ct.resetTime();
+            if (isControlPressed) {
+                camera.zoom *= yOffset > 0 ? 1.02f : 0.98f;
+            } else {
+                camera.y -= (float) yOffset * 20;
+            }
+        });
 
         glfwMakeContextCurrent(window);
         // activate V Sync
-        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICSCARD WILL GO WROOOOOOOOOOM
+        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICSCARD WILL GO
+        // WROOOOOOOOOOM
         glfwSwapInterval(1);
 
         glfwShowWindow(window);
@@ -157,11 +157,14 @@ public class Gui {
         if (font == -1) {
             System.err.println("Warnung: Font konnte nicht geladen werden. Text wird nicht angezeigt.");
         }
-        double[] rawMouseX = {0};
-        double[] rawMouseY = {0};
+        double[] rawMouseX = { 0 };
+        double[] rawMouseY = { 0 };
 
         long lastTime = System.nanoTime();
         int frames = 0;
+
+        float lastWorldX = 0, lastWorldY = 0;
+        Node hoveredNode = null;
 
         while (!glfwWindowShouldClose(window)) {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
@@ -173,18 +176,15 @@ public class Gui {
                 lastTime = System.nanoTime();
             }
 
-//            int[] fbWidth = new int[1];
-//            int[] fbHeight = new int[1];
+            // int[] fbWidth = new int[1];
+            // int[] fbHeight = new int[1];
 
-
-//            glfwGetFramebufferSize(window, fbWidth, fbHeight);
+            // glfwGetFramebufferSize(window, fbWidth, fbHeight);
 
             glfwGetWindowSize(window, winWidth, winHeight);
 
-//            float pxRatio = (float) fbWidth[0] / (float) winWidth[0];
+            // float pxRatio = (float) fbWidth[0] / (float) winWidth[0];
 
-            glMatrixMode(GL_PROJECTION);
-            glLoadIdentity();
             glOrtho(0, width, height, 0, -1, 1);
 
             glMatrixMode(GL_MODELVIEW);
@@ -193,11 +193,9 @@ public class Gui {
             float centerX = width / 2.0f;
             float centerY = height / 2.0f;
 
-            glPushMatrix();
             glTranslatef(centerX, centerY, 0);
             glScalef(camera.zoom, camera.zoom, 1.0f);
             glTranslatef(-camera.x, -camera.y, 0);
-            glPopMatrix();
 
             nvgBeginFrame(nvg, width, height, 1.0f);
 
@@ -205,8 +203,6 @@ public class Gui {
             nvgTranslate(nvg, centerX, centerY);
             nvgScale(nvg, camera.zoom, camera.zoom);
             nvgTranslate(nvg, -camera.x, -camera.y);
-
-            glfwSetWindowTitle(window, title + " - " + ct.currentDir.getName());
 
             ct.currentDir.printSelf(nvg, winWidth[0], winHeight[0], camera);
 
@@ -232,12 +228,18 @@ public class Gui {
                     isDragging = false;
                 }
             } else {
-                Node clicked = ct.currentDir.getHoverdNode(mouseWorldX, mouseWorldY);
+                if (mouseWorldX != lastWorldX || mouseWorldY != lastWorldY) {
+                    hoveredNode = ct.currentDir.getHoverdNode(mouseWorldX, mouseWorldY);
+                    lastWorldX = mouseWorldX;
+                    lastWorldY = mouseWorldY;
+                }
+                Node clicked = hoveredNode;
                 if (clicked != null) {
                     if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
                         if (clicked != ct.currentDir) {
                             System.out.println("sub");
                             if (clicked instanceof Directory) {
+                                glfwSetWindowTitle(window, title + " - " + ct.currentDir.getName());
                                 Directory nextDir = (Directory) clicked;
                                 updateCurrentDir(nextDir);
                             } else {
@@ -258,6 +260,7 @@ public class Gui {
                             Directory nextDir = clicked.getParent();
                             updateCurrentDir(nextDir);
                             System.out.println("navigate to parent directory: " + nextDir.getName());
+                            glfwSetWindowTitle(window, title + " - " + ct.currentDir.getName());
                         }
                     }
                 }
@@ -279,6 +282,7 @@ public class Gui {
 
     /**
      * updates the current directory and also what comes with it
+     * 
      * @param newDir new current directory new current directory
      */
     private void updateCurrentDir(Directory newDir) {
@@ -288,6 +292,8 @@ public class Gui {
         ct.reloadCurrentDir();
         ct.currentDir.setTargetX(0);
         ct.currentDir.setTargetY(0);
+        ct.currentDir.startAngle = (float) (-Math.PI / 2.0);
+        ct.currentDir.angleStep = (float) (2 * Math.PI / ct.currentDir.getChildren().size());
         camera.x = 0;
         camera.y = 0;
     }

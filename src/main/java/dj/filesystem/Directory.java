@@ -13,6 +13,9 @@ import static org.lwjgl.nanovg.NanoVG.*;
 public class Directory extends Node {
     protected static boolean isIdleState = false;
     protected ArrayList<Node> children = new ArrayList<>();
+    public float startAngle = (float) (-Math.PI / 2.0f);
+
+    public float angleStep = 0;
 
     public Directory(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         super(name, x, y, color, parent, isParent);
@@ -22,22 +25,23 @@ public class Directory extends Node {
      * sets the target position for all children and also draws them
      */
     public void printChildren(long nvg) {
-        if (children.isEmpty())
-            return;
-        float startAngle = (float) (-Math.PI / 2.0);
-        float angleStep = (float) (2 * Math.PI / children.size());
+        if (children.isEmpty()) return;
         float orbitRadius = 200.0f;
-        if (children.size() > 20)
-            orbitRadius = 250;
+        nvgBeginPath(nvg);
+        if (children.size() > 20) orbitRadius = 250;
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
             float angle = startAngle + (i * angleStep);
             child.targetX = (float) (this.x + orbitRadius * Math.cos(angle));
             child.targetY = (float) (this.y + orbitRadius * Math.sin(angle));
             child.moveTargetPos();
-            drawLine(nvg, this.x, this.y, child.x, child.y);
-
+            NanoVG.nvgMoveTo(nvg, this.x, this.y);
+            NanoVG.nvgLineTo(nvg, child.x, child.y);
         }
+        nvgRGBAf(1, 1, 1, 1, Node.sharedColor);
+        NanoVG.nvgStrokeColor(nvg, Node.sharedColor);
+        NanoVG.nvgStrokeWidth(nvg, 2.0f);
+        NanoVG.nvgStroke(nvg);
         for (Node n : children) {
             if (n instanceof Directory n1) {
                 n1.printChildren(nvg);
@@ -54,8 +58,8 @@ public class Directory extends Node {
      *
      * @param startX starting x position
      * @param startY starting y position
-     * @param endX   ending x position
-     * @param endY   ending y position
+     * @param endX ending x position
+     * @param endY ending y position
      */
     private void drawLine(long nvg, float startX, float startY, float endX, float endY) {
         nvgBeginPath(nvg);
@@ -68,8 +72,7 @@ public class Directory extends Node {
     }
 
     private void printIdleChildren(long nvg, int width, int height, Camera camera) {
-        if (children.isEmpty())
-            return;
+        if (children.isEmpty()) return;
 
         for (int i = 0; i < children.size(); i++) {
             Node child = children.get(i);
@@ -89,8 +92,8 @@ public class Directory extends Node {
     /**
      * prints the directory itself and everything that comes with it
      *
-     * @param nvg    nvg
-     * @param width  current window width
+     * @param nvg nvg
+     * @param width current window width
      * @param height current window height
      * @param camera the camera
      */
@@ -102,8 +105,7 @@ public class Directory extends Node {
         } else {
             printChildren(nvg);
         }
-        if (isParent)
-            moveSelf(width, height, camera);
+        if (isParent) moveSelf(width, height, camera);
         printAtPos(nvg, x, y, radius);
         printSelfText(nvg);
     }
@@ -219,7 +221,6 @@ public class Directory extends Node {
             n2.targetX += sepX;
             n2.y += sepY;
             n2.targetY += sepY;
-
         }
     }
 
@@ -264,7 +265,7 @@ public class Directory extends Node {
     /**
      * checks for all nodes if the collision has been checkt and if not check it
      *
-     * @param node      node to check the collisions with
+     * @param node node to check the collisions with
      * @param neighbors all possible neighbors
      */
     private void checkPotentialColliders(Node node, List<Node> neighbors, long nvg) {
@@ -273,7 +274,7 @@ public class Directory extends Node {
                     && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
                 if (isIdleState) {
 
-                    if (node == this)
+                    if (node == this || potentialCollider == this)
                         drawLine(nvg, node.x, node.y, potentialCollider.x, potentialCollider.y);
                     checkIdleCollision(node, potentialCollider);
                 } else {
@@ -304,6 +305,10 @@ public class Directory extends Node {
                 }
             }
         }
+    }
+
+    public ArrayList<Node> getChildren() {
+        return children;
     }
 
     public void setIdleState(boolean idleState) {

@@ -23,7 +23,6 @@ public class Node {
     protected float radius = 25.0f;
     private String name;
 
-
     public Node(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.name = name;
         this.x = x;
@@ -39,6 +38,7 @@ public class Node {
 
     /**
      * default movement of the center dot
+     * 
      * @param width window width
      * @param height window height
      * @param camera current camera
@@ -65,7 +65,6 @@ public class Node {
 
         double minY = visibleTop + radius;
         double maxY = visibleBottom - radius;
-
 
         if (nextX <= minX || nextX >= maxX) {
             dx = -dx;
@@ -96,6 +95,7 @@ public class Node {
 
     /**
      * prints a circle at the given position with the radius
+     * 
      * @param x x position to print at
      * @param y y position to print at
      * @param radius radius of the circle
@@ -136,11 +136,13 @@ public class Node {
 
     /**
      * gets the color of the directory so it doesn't have to create a new one
+     * 
      * @return color
      */
     public NVGColor getColor() {
         if (isParent) nvgRGBAf(1, 0, 0, 1, sharedColor);
-        else nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);
+        else
+            nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);
         return sharedColor;
     }
 

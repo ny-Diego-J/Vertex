@@ -12,14 +12,18 @@ import java.util.stream.Stream;
 public class DirReader {
 
     /**
-     * This function will get all children of the current one.
-     * There is a value for maximum recursion that I don't recommend to turn up if you don't want to let your pc explode
+     * This function will get all children of the current one. There is a value
+     * for maximum recursion that I don't recommend to turn up if you don't want
+     * to let your pc explode
+     * 
      * @param current current directory to set children
      * @param pathString Path to current directory
-     * @param recursionState state of recursion, set 0 as default and with every new node
-     *                       the state will go up by one. This is to prevent that every subdirectory is looked at
+     * @param recursionState state of recursion, set 0 as default and with every
+     * new node the state will go up by one. This is to prevent that every
+     * subdirectory is looked at
      * @return current directory with all new children
-     * @throws IOException throws an IO Exception if the new node couldn't be created
+     * @throws IOException throws an IO Exception if the new node couldn't be
+     * created
      */
     public Directory getDirectories(Directory current, String pathString, int recursionState) throws IOException {
         Path path = Paths.get(pathString);
@@ -35,9 +39,7 @@ public class DirReader {
                 } catch (IOException e) {
                 }
 
-
-                Vector4f color = isDir ? new Vector4f(0.2f, 0.4f, 0.8f, 0.8f) :
-                        new Vector4f(0.5f, 0.5f, 0.5f, 0.8f);
+                Vector4f color = isDir ? new Vector4f(0.2f, 0.4f, 0.8f, 0.8f) : new Vector4f(0.5f, 0.5f, 0.5f, 0.8f);
 
                 if (isDir) {
                     try {
@@ -57,6 +59,18 @@ public class DirReader {
         } catch (IOException e) {
             System.err.println("Fehler beim Lesen von " + pathString + ": " + e.getMessage());
         }
+
+        float startAngle = (float) (-Math.PI / 2.0);
+        float angleStep = (float) (2 * Math.PI / current.children.size());
+
+        float orbitRadius = 20.0f;
+        for (int i = 0; i < current.children.size(); i++) {
+            Node child = current.children.get(i);
+            float angle = startAngle + (i * angleStep);
+            child.x = (float) (current.x + orbitRadius * Math.cos(angle));
+            child.y = (float) (current.y + orbitRadius * Math.sin(angle));
+        }
+
         return current;
     }
 
@@ -82,6 +96,7 @@ public class DirReader {
 
     /**
      * opens the node
+     * 
      * @param node node to open
      */
     public void openFile(Node node) {

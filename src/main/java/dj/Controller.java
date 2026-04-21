@@ -13,8 +13,8 @@ public class Controller {
     private int counter = TIME;
 
     public void run() {
-        gui = new Gui(this);
         reloadRoot();
+        gui = new Gui(this);
         initialize();
         gui.run();
     }
@@ -27,6 +27,9 @@ public class Controller {
             root = new Directory("c:\\", 0, 0, new Vector4f(1, 0, 0, 1), null, true);
             root = dr.getDirectories(root, root.getName(), 0);
             currentDir = root;
+            currentDir.moveAngle = (float) (-Math.PI / 2.0);
+            currentDir.angleStep = (float) (2 * Math.PI / currentDir.getChildren().size());
+
         } catch (Exception e) {
             System.out.println(e.getMessage());
         }
