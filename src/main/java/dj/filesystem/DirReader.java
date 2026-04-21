@@ -12,18 +12,15 @@ import java.util.stream.Stream;
 public class DirReader {
 
     /**
-     * This function will get all children of the current one. There is a value
-     * for maximum recursion that I don't recommend to turn up if you don't want
-     * to let your pc explode
+     * This function will get all children of the current one. There is a value for maximum recursion that I don't
+     * recommend to turn up if you don't want to let your pc explode
      * 
      * @param current current directory to set children
      * @param pathString Path to current directory
-     * @param recursionState state of recursion, set 0 as default and with every
-     * new node the state will go up by one. This is to prevent that every
-     * subdirectory is looked at
+     * @param recursionState state of recursion, set 0 as default and with every new node the state will go up by one.
+     * This is to prevent that every subdirectory is looked at
      * @return current directory with all new children
-     * @throws IOException throws an IO Exception if the new node couldn't be
-     * created
+     * @throws IOException throws an IO Exception if the new node couldn't be created
      */
     public Directory getDirectories(Directory current, String pathString, int recursionState) throws IOException {
         Path path = Paths.get(pathString);

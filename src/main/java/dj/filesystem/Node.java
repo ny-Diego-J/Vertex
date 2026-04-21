@@ -141,8 +141,7 @@ public class Node {
      */
     public NVGColor getColor() {
         if (isParent) nvgRGBAf(1, 0, 0, 1, sharedColor);
-        else
-            nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);
+        else nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);
         return sharedColor;
     }
 

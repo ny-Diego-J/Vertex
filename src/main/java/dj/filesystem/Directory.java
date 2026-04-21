@@ -218,8 +218,8 @@ public class Directory extends Node {
     }
 
     /**
-     * makes a hashmap out of all children and the Directory itself The primary
-     * key is the cell and the other value is the node
+     * makes a hashmap out of all children and the Directory itself The primary key is the cell and the other value is
+     * the node
      *
      * @param cellSize grid size
      * @return hashmap with all children
