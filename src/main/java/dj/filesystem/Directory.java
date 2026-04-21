@@ -14,7 +14,6 @@ public class Directory extends Node {
     protected static boolean isIdleState = false;
     protected ArrayList<Node> children = new ArrayList<>();
     public float startAngle = (float) (-Math.PI / 2.0f);
-
     public float angleStep = 0;
 
     public Directory(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
@@ -53,6 +52,13 @@ public class Directory extends Node {
 
     }
 
+    /**
+     * sets all the positions for the children in idle mode
+     *
+     * @param width window width
+     * @param height window height
+     * @param camera current camera
+     */
     private void printIdleChildren(long nvg, int width, int height, Camera camera) {
         if (children.isEmpty()) return;
 
@@ -125,8 +131,10 @@ public class Directory extends Node {
     }
 
     /**
-     * NORMAL STATE: Wendet eine weiche Abstoßungskraft an, damit Nodes nicht
-     * ineinander hängen.
+     * Checks colission for two nodes and makes a soft colission
+     * 
+     * @param n1 first node
+     * @param n2 second node
      */
     private void checkNormalCollision(Node n1, Node n2) {
         float minDistance = 65.0f;
@@ -161,7 +169,10 @@ public class Directory extends Node {
     }
 
     /**
-     * IDLE STATE: Harter Abprall wie bei Billardkugeln
+     * Checks colission for two nodes and makes a hard colission
+     * 
+     * @param n1 first node
+     * @param n2 second node
      */
     private void checkIdleCollision(Node n1, Node n2) {
         float minDistance = n1.getRadius() + n2.getRadius();
