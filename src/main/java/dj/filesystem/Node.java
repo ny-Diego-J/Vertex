@@ -35,6 +35,9 @@ public class Node {
         this.isParent = isParent;
     }
 
+    /**
+     * prints the name of the node
+     */
     public void printSelfText(long nvg) {
         NanoVG.nvgFontSize(nvg, fontSize);
         NanoVG.nvgFontFace(nvg, "jbm");
@@ -43,6 +46,12 @@ public class Node {
         NanoVG.nvgText(nvg, x, y, name);
     }
 
+    /**
+     * prints a circle at the given position with the radius
+     * @param x x position to print at
+     * @param y y position to print at
+     * @param radius radius of the circle
+     */
     public void printAtPos(long nvg, float x, float y, float radius) {
         nvgBeginPath(nvg);
         nvgCircle(nvg, x, y, radius);
@@ -50,6 +59,9 @@ public class Node {
         nvgFill(nvg);
     }
 
+    /**
+     * moves the node the calculated distance to its target position
+     */
     public void moveTargetPos() {
         float tension = 0.045f;
         float dampening = 0.85f;
@@ -74,6 +86,10 @@ public class Node {
         }
     }
 
+    /**
+     * gets the color of the directory so it doesn't have to create a new one
+     * @return color
+     */
     public NVGColor getColor() {
         if (isParent) nvgRGBAf(1, 0, 0, 1, sharedColor);
         else nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);

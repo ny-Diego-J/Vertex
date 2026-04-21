@@ -17,6 +17,9 @@ public class Controller {
         gui.run();
     }
 
+    /**
+     * reloads the root directory
+     */
     public void reloadRoot() {
         try {
             root = new Directory("c:\\", 0, 0, new Vector4f(1, 0, 0, 1), null, true);
@@ -27,6 +30,9 @@ public class Controller {
         }
     }
 
+    /**
+     * reloads the current directory
+     */
     public void reloadCurrentDir() {
         try {
             currentDir.setIfParent(false);

@@ -5,11 +5,7 @@ import org.joml.Vector4f;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.nanovg.NanoVG;
 
-import java.awt.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 import static dj.Gui.*;
 import static org.lwjgl.nanovg.NanoVG.*;
@@ -21,6 +17,9 @@ public class Directory extends Node {
         super(name, x, y, color, parent, isParent);
     }
 
+    /**
+     * sets the target position for all children and also draws them
+     */
     public void printChildren(long nvg) {
         if (children.isEmpty()) return;
         float startAngle = (float) (-Math.PI / 2.0);
@@ -48,6 +47,13 @@ public class Directory extends Node {
 
     }
 
+    /**
+     * Draws a line from a start point to the end point
+     * @param startX starting x position
+     * @param startY starting y position
+     * @param endX ending x position
+     * @param endY ending y position
+     */
     private void drawLine(long nvg, float startX, float startY, float endX, float endY) {
         nvgBeginPath(nvg);
         NanoVG.nvgMoveTo(nvg, startX, startY);
@@ -58,6 +64,13 @@ public class Directory extends Node {
         NanoVG.nvgStroke(nvg);
     }
 
+    /**
+     * prints the directory itself and everything that comes with it
+     * @param nvg nvg
+     * @param width current window width
+     * @param height current window height
+     * @param camera the camera
+     */
     public void printSelf(long nvg, int width, int height, Camera camera) {
         moveTargetPos();
         printChildren(nvg);
@@ -66,6 +79,12 @@ public class Directory extends Node {
         super.printSelfText(nvg);
     }
 
+    /**
+     * default movement of the center dot
+     * @param width window width
+     * @param height window height
+     * @param camera current camera
+     */
     private void moveRoot(int width, int height, Camera camera) {
         double radians = Math.toRadians(moveAngle);
         double dx = moveSpeed * Math.cos(radians);
@@ -77,11 +96,11 @@ public class Directory extends Node {
         float centerX = width / 2.0f;
         float centerY = height / 2.0f;
 
-        double visibleLeft = (0 - centerX) / camera.zoom + camera.x;
-        double visibleRight = (width - centerX) / camera.zoom + camera.x;
+        double visibleLeft = (0 - centerX) / camera.getZoom() + camera.getX();
+        double visibleRight = (width - centerX) / camera.getZoom() + camera.getX();
 
-        double visibleTop = (0 - centerY) / camera.zoom + camera.y;
-        double visibleBottom = (height - centerY) / camera.zoom + camera.y;
+        double visibleTop = (0 - centerY) / camera.getZoom() + camera.getY();
+        double visibleBottom = (height - centerY) / camera.getZoom() + camera.getY();
 
         double minX = visibleLeft + radius;
         double maxX = visibleRight - radius;
@@ -106,7 +125,13 @@ public class Directory extends Node {
         targetY += dy;
     }
 
-    public Node getClickedNode(float mouseWorldX, float mouseWorldY) {
+    /**
+     * returns the node that is currently hovered over
+     * @param mouseWorldX mouse x position
+     * @param mouseWorldY mouse y position
+     * @return hovered node
+     */
+    public Node getHoverdNode(float mouseWorldX, float mouseWorldY) {
         float dxSelf = mouseWorldX - this.x;
         float dySelf = mouseWorldY - this.y;
         if ((dxSelf * dxSelf) + (dySelf * dySelf) <= (this.radius * this.radius)) {
@@ -132,6 +157,11 @@ public class Directory extends Node {
     }
 
 
+    /**
+     * checks the collisions between two nodes and applies repulsion to move them away from each other
+     * @param n1 first node
+     * @param n2 second node
+     */
     private void checkCollisions(Node n1, Node n2) {
         float repulsionStrength = 0.1f;
         float minDistance = 65.0f;
@@ -169,6 +199,12 @@ public class Directory extends Node {
     }
 
 
+    /**
+     * makes a hashmap out of all children and the Directory itself
+     * The primary key is the cell and the other value is the node
+     * @param cellSize grid size
+     * @return hashmap with all children
+     */
     private HashMap<String, List<Node>> getCellList(int cellSize) {
         HashMap<String, List<Node>> grid = new HashMap<>();
         for (Node node : children) {
@@ -182,21 +218,29 @@ public class Directory extends Node {
         return grid;
     }
 
+    /**
+     * checks for all nodes if the collision has been checkt and if not check it
+     * @param node node to check the collisions with
+     * @param neighbors all possible neighbors
+     */
     private void checkPotentialColliders(Node node, List<Node> neighbors) {
         for (Node potentialCollider : neighbors) {
-            if (potentialCollider != node) {
-                if (System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
-                    checkCollisions(node, potentialCollider);
-                }
+            if (potentialCollider != node && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
+                checkCollisions(node, potentialCollider);
             }
         }
     }
 
+    /**
+     * checks all collisions for every Node in their directory
+     */
     private void applyRepulsion() {
         int cellSize = 200;
+        List<Node> allNodesToUpdate = new ArrayList<>(children);
+        allNodesToUpdate.add(this);
 
         HashMap<String, List<Node>> grid = getCellList(cellSize);
-        for (Node node : children) {
+        for (Node node : allNodesToUpdate) {
             int myGridX = Math.floorDiv((int) node.x, cellSize);
             int myGridY = Math.floorDiv((int) node.y, cellSize);
             for (int offsetX = -1; offsetX <= 1; offsetX++) {

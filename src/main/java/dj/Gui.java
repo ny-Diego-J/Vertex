@@ -1,15 +1,13 @@
 package dj;
 
-import dj.filesystem.Directory;
-import dj.filesystem.Node;
+import dj.filesystem.*;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.nanovg.NanoVG.nvgCreateFont;
-import static org.lwjgl.nanovg.NanoVGGL2.NVG_ANTIALIAS;
-import static org.lwjgl.nanovg.NanoVGGL2.NVG_STENCIL_STROKES;
+import static org.lwjgl.nanovg.NanoVGGL2.*;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.nanovg.NanoVGGL3.*;
@@ -40,6 +38,9 @@ public class Gui {
         this.camera = new Camera(0, 0);
     }
 
+    /**
+     * main controller
+     */
     public void run() {
         init();
         loop();
@@ -51,6 +52,9 @@ public class Gui {
         glfwSetErrorCallback(null).free();
     }
 
+    /**
+     * initiation of the window and of the input callbacks
+     */
     private void init() {
         // Fehler-Callback (druckt Fehler in die Konsole)
         GLFWErrorCallback.createPrint(System.err).set();
@@ -136,6 +140,9 @@ public class Gui {
         glLoadIdentity();
     }
 
+    /**
+     * main loop for printing
+     */
     private void loop() {
         long nvg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (nvg == 0) {
@@ -221,7 +228,7 @@ public class Gui {
                     isDragging = false;
                 }
             } else {
-                Node clicked = ct.currentDir.getClickedNode(mouseWorldX, mouseWorldY);
+                Node clicked = ct.currentDir.getHoverdNode(mouseWorldX, mouseWorldY);
                 if (clicked != null) {
                     if (leftMouseButtonPressed && !wasLeftMouseButtonPressed) {
                         if (clicked != ct.currentDir) {
@@ -266,6 +273,10 @@ public class Gui {
         nvgDelete(nvg);
     }
 
+    /**
+     * updates the current directory and also what comes with it
+     * @param newDir new current directory new current directory
+     */
     private void updateCurrentDir(Directory newDir) {
         newDir.setX(0);
         newDir.setY(0);
@@ -277,6 +288,9 @@ public class Gui {
         camera.y = 0;
     }
 
+    /**
+     * secondary input handle for short and simple inputs
+     */
     private void handleInput() {
         float speed = 5.0f / camera.zoom;
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) camera.y -= speed;
@@ -284,7 +298,7 @@ public class Gui {
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) camera.x -= speed;
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) camera.x += speed;
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
-            ct.reloadRoot();
+            ct.reloadCurrentDir();
 
         // Zoom with Q and E
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) camera.zoom *= 1.02f;
