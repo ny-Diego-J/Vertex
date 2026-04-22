@@ -5,7 +5,7 @@ import dj.filesystem.Directory;
 import org.joml.Vector4f;
 
 public class Controller {
-    private final int TIME = 3;
+    private final int TIME = 60;
     protected Directory currentDir;
     protected DirReader dr = new DirReader();
     private Directory root;
