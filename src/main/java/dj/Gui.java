@@ -171,7 +171,7 @@ public class Gui {
 
             frames++;
             if (System.nanoTime() - lastTime >= 1_000_000_000) {
-                // System.out.println("FPS: " + frames);
+                System.out.println("FPS: " + frames);
                 frames = 0;
                 lastTime = System.nanoTime();
             }

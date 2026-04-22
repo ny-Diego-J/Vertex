@@ -61,19 +61,21 @@ public class Directory extends Node {
     private void printIdleChildren(long nvg, int width, int height, Camera camera) {
         if (children.isEmpty()) return;
 
-        for (int i = 0; i < children.size(); i++) {
-            Node child = children.get(i);
+        for (Node child : children) {
             child.moveSelf(width, height, camera);
 
             if (child instanceof Directory childDir) {
                 childDir.printIdleChildren(nvg, width, height, camera);
             }
+        }
+
+        applyRepulsion(nvg);
+
+        for (Node child : children) {
             child.moveTargetPos();
             child.printAtPos(nvg, child.x, child.y, child.radius);
             child.printSelfText(nvg);
         }
-
-        applyRepulsion(nvg);
     }
 
     /**
@@ -86,12 +88,12 @@ public class Directory extends Node {
      */
     public void printSelf(long nvg, int width, int height, Camera camera) {
         moveSpeed = isIdleState ? 1.0f : 0.0f;
-        moveTargetPos();
         if (isIdleState) {
             printIdleChildren(nvg, width, height, camera);
         } else {
             printChildren(nvg);
         }
+        moveTargetPos();
         if (isParent) moveSelf(width, height, camera);
         printAtPos(nvg, x, y, radius);
         printSelfText(nvg);
@@ -187,8 +189,8 @@ public class Directory extends Node {
             float nx = dx / distance;
             float ny = dy / distance;
 
-            float sepX = nx * (overlap / 2.0f);
-            float sepY = ny * (overlap / 2.0f);
+            float sepX = nx * (overlap * 0.51f);
+            float sepY = ny * (overlap * 0.51f);
 
             double v1x = Math.cos(Math.toRadians(n1.moveAngle));
             double v1y = Math.sin(Math.toRadians(n1.moveAngle));
@@ -203,6 +205,9 @@ public class Directory extends Node {
             if (velAlongNormal < 0) {
                 reflectNodeAngle(n1, nx, ny);
                 reflectNodeAngle(n2, nx, ny);
+
+                reflectVelocity(n1, nx, ny);
+                reflectVelocity(n2, nx, ny);
             }
             n1.x -= sepX;
             n1.targetX -= sepX;
@@ -215,6 +220,15 @@ public class Directory extends Node {
             n2.targetY += sepY;
         }
 
+    }
+
+    /**
+     * Filp momentum
+     */
+    private void reflectVelocity(Node node, float nx, float ny) {
+        double dotProduct = (node.vx * nx) + (node.vy * ny);
+        node.vx = (float) (node.vx - 2 * dotProduct * nx);
+        node.vy = (float) (node.vy - 2 * dotProduct * ny);
     }
 
     /**
