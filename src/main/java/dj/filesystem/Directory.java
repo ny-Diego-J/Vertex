@@ -49,7 +49,6 @@ public class Directory extends Node {
             n.printSelfText(nvg);
         }
         applyRepulsion(nvg);
-
     }
 
     /**
@@ -215,11 +214,12 @@ public class Directory extends Node {
             n2.y += sepY;
             n2.targetY += sepY;
         }
+
     }
 
     /**
-     * makes a hashmap out of all children and the Directory itself The primary key is the cell and the other value is
-     * the node
+     * makes a hashmap out of all children and the Directory itself The primary
+     * key is the cell and the other value is the node
      *
      * @param cellSize grid size
      * @return hashmap with all children
@@ -264,8 +264,7 @@ public class Directory extends Node {
     private void checkPotentialColliders(Node node, List<Node> neighbors, long nvg) {
         nvgBeginPath(nvg);
         for (Node potentialCollider : neighbors) {
-            if (potentialCollider != node
-                    && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
+            if (potentialCollider != node && System.identityHashCode(node) < System.identityHashCode(potentialCollider)) {
                 if (isIdleState) {
 
                     if (node == this || potentialCollider == this) {
@@ -273,10 +272,7 @@ public class Directory extends Node {
                         NanoVG.nvgLineTo(nvg, potentialCollider.x, potentialCollider.y);
                     }
                     checkIdleCollision(node, potentialCollider);
-                } else {
-
-                    checkNormalCollision(node, potentialCollider);
-                }
+                } else checkNormalCollision(node, potentialCollider);
             }
         }
         nvgRGBAf(1, 1, 1, 1, Node.sharedColor);
