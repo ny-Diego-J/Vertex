@@ -57,7 +57,7 @@ public class Gui {
      * initiation of the window and of the input callbacks
      */
     private void init() {
-        // Fehler-Callback (druckt Fehler in die Konsole)
+        // Error-Callback (prints error in the console)
         GLFWErrorCallback.createPrint(System.err).set();
 
         // GLFW initiation
@@ -82,7 +82,7 @@ public class Gui {
         glfwSetFramebufferSizeCallback(window, (windowHandle, newWidth, newHeight) -> {
             this.width = newWidth;
             this.height = newHeight;
-            // OpenGL direkt informieren
+            // directly inform OpenGL
             glViewport(0, 0, newWidth, newHeight);
         });
 
@@ -126,7 +126,7 @@ public class Gui {
 
         glfwMakeContextCurrent(window);
         // activate V Sync
-        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICSCARD WILL GO
+        // IMPORTANT DO NOT DEACTIVATE OR YOUR GRAPHICS CARD WILL GO
         // WROOOOOOOOOOM
         glfwSwapInterval(1);
 
@@ -150,12 +150,12 @@ public class Gui {
     private void loop() {
         long nvg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (nvg == 0) {
-            throw new RuntimeException("NanoVG konnte nicht initialisiert werden!");
+            throw new RuntimeException("NanoVG initialization has failed!!");
         }
 
         int font = nvgCreateFont(nvg, "jbm", "src/main/resources/fonts/jbm.ttf");
         if (font == -1) {
-            System.err.println("Warnung: Font konnte nicht geladen werden. Text wird nicht angezeigt.");
+            System.err.println("Warning: Font could not be loaded. Text won't display.");
         }
         double[] rawMouseX = { 0 };
         double[] rawMouseY = { 0 };

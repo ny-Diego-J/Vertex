@@ -132,7 +132,7 @@ public class Directory extends Node {
     }
 
     /**
-     * Checks colission for two nodes and makes a soft colission
+     * Checks collision for two nodes and makes a soft collision
      * 
      * @param n1 first node
      * @param n2 second node
@@ -170,7 +170,7 @@ public class Directory extends Node {
     }
 
     /**
-     * Checks colission for two nodes and makes a hard colission
+     * Checks collision for two nodes and makes a hard collision
      * 
      * @param n1 first node
      * @param n2 second node
@@ -223,7 +223,7 @@ public class Directory extends Node {
     }
 
     /**
-     * Filp momentum
+     * Flip momentum
      */
     private void reflectVelocity(Node node, float nx, float ny) {
         double dotProduct = (node.vx * nx) + (node.vy * ny);
@@ -252,7 +252,7 @@ public class Directory extends Node {
     }
 
     /**
-     * Reflektiert den moveAngle einer Node an der Kollisionsnormalen
+     * Reflects the moveAngle of a Node on the collision line
      */
     private void reflectNodeAngle(Node node, float nx, float ny) {
         double radians = Math.toRadians(node.moveAngle);
@@ -270,7 +270,7 @@ public class Directory extends Node {
     }
 
     /**
-     * checks for all nodes if the collision has been checkt and if not check it
+     * checks for all nodes if the collision has been checked and if not check it
      *
      * @param node node to check the collisions with
      * @param neighbors all possible neighbors
