@@ -1,8 +1,8 @@
 package dj;
 
 public class Camera {
-    protected float x, y;
-    protected float zoom = 1.5f;
+    private float x, y;
+    private float zoom = 1.5f;
 
     public Camera(float x, float y) {
         this.x = x;
@@ -19,5 +19,25 @@ public class Camera {
 
     public float getZoom() {
         return zoom;
+    }
+
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public void addToX(float add) {
+        x += add;
+    }
+
+    public void addToY(float add) {
+        y += add;
+    }
+
+    public void multiplyToZoom(float add) {
+        zoom *= add;
     }
 }

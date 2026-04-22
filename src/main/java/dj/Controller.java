@@ -58,7 +58,6 @@ public class Controller {
                 try {
                     Thread.sleep(1000);
                     counter--;
-                    System.out.println(counter);
                     if (counter == 0) {
                         currentDir.setIdleState(true);
                         counter = TIME;

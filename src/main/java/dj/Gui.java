@@ -91,8 +91,8 @@ public class Gui {
                 double diffX = xPos - lastMouseX;
                 double diffY = yPos - lastMouseY;
 
-                camera.x -= (float) (diffX / camera.zoom);
-                camera.y -= (float) (diffY / camera.zoom);
+                camera.addToX((float) -(diffX / camera.getZoom()));
+                camera.addToY((float) -(diffY / camera.getZoom()));
             }
         });
 
@@ -118,9 +118,9 @@ public class Gui {
         glfwSetScrollCallback(window, (w, xOffset, yOffset) -> {
             ct.resetTime();
             if (isControlPressed) {
-                camera.zoom *= yOffset > 0 ? 1.02f : 0.98f;
+                camera.multiplyToZoom(yOffset > 0 ? 1.02f : 0.98f);
             } else {
-                camera.y -= (float) yOffset * 20;
+                camera.addToY(-((float) yOffset * 20));
             }
         });
 
@@ -171,7 +171,7 @@ public class Gui {
 
             frames++;
             if (System.nanoTime() - lastTime >= 1_000_000_000) {
-                System.out.println("FPS: " + frames);
+                // System.out.println("FPS: " + frames);
                 frames = 0;
                 lastTime = System.nanoTime();
             }
@@ -194,22 +194,22 @@ public class Gui {
             float centerY = height / 2.0f;
 
             glTranslatef(centerX, centerY, 0);
-            glScalef(camera.zoom, camera.zoom, 1.0f);
-            glTranslatef(-camera.x, -camera.y, 0);
+            glScalef(camera.getZoom(), camera.getZoom(), 1.0f);
+            glTranslatef(-camera.getX(), -camera.getY(), 0);
 
             nvgBeginFrame(nvg, width, height, 1.0f);
 
             nvgSave(nvg);
             nvgTranslate(nvg, centerX, centerY);
-            nvgScale(nvg, camera.zoom, camera.zoom);
-            nvgTranslate(nvg, -camera.x, -camera.y);
+            nvgScale(nvg, camera.getZoom(), camera.getZoom());
+            nvgTranslate(nvg, -camera.getX(), -camera.getY());
 
             ct.currentDir.printSelf(nvg, winWidth[0], winHeight[0], camera);
 
             glfwGetCursorPos(window, rawMouseX, rawMouseY);
 
-            float mouseWorldX = (float) ((rawMouseX[0] - centerX) / camera.zoom + camera.x);
-            float mouseWorldY = (float) ((rawMouseY[0] - centerY) / camera.zoom + camera.y);
+            float mouseWorldX = (float) ((rawMouseX[0] - centerX) / camera.getZoom() + camera.getX());
+            float mouseWorldY = (float) ((rawMouseY[0] - centerY) / camera.getZoom() + camera.getY());
 
             if (isDragging) {
                 if (leftMouseButtonPressed) {
@@ -294,31 +294,32 @@ public class Gui {
         ct.currentDir.setTargetY(0);
         ct.currentDir.startAngle = (float) (-Math.PI / 2.0);
         ct.currentDir.angleStep = (float) (2 * Math.PI / ct.currentDir.getChildren().size());
-        camera.x = 0;
-        camera.y = 0;
+        camera.setX(0);
+        camera.setY(0);
+
     }
 
     /**
      * secondary input handle for short and simple inputs
      */
     private void handleInput() {
-        float speed = 5.0f / camera.zoom;
+        float speed = 5.0f / camera.getZoom();
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-            camera.y -= speed;
+            camera.addToY(-speed);
             ct.resetTime();
 
         }
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-            camera.y += speed;
+            camera.addToY(speed);
             ct.resetTime();
 
         }
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-            camera.x -= speed;
+            camera.addToX(-speed);
             ct.resetTime();
         }
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-            camera.x += speed;
+            camera.addToX(speed);
             ct.resetTime();
         }
         if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
@@ -328,11 +329,11 @@ public class Gui {
 
         // Zoom with Q and E
         if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS) {
-            camera.zoom *= 1.02f;
+            camera.multiplyToZoom(1.02f);
             ct.resetTime();
         }
         if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS) {
-            camera.zoom /= 1.02f;
+            camera.multiplyToZoom(1f / 1.02f);
             ct.resetTime();
         }
         if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS) {
