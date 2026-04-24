@@ -12,15 +12,18 @@ import java.util.stream.Stream;
 public class DirReader {
 
     /**
-     * This function will get all children of the current one. There is a value for maximum recursion that I don't
-     * recommend to turn up if you don't want to let your pc explode
+     * This function will get all children of the current one. There is a value
+     * for maximum recursion that I don't recommend to turn up if you don't want
+     * to let your pc explode
      * 
      * @param current current directory to set children
      * @param pathString Path to current directory
-     * @param recursionState state of recursion, set 0 as default and with every new node the state will go up by one.
-     * This is to prevent that every subdirectory is looked at
+     * @param recursionState state of recursion, set 0 as default and with every
+     * new node the state will go up by one. This is to prevent that every
+     * subdirectory is looked at
      * @return current directory with all new children
-     * @throws IOException throws an IO Exception if the new node couldn't be created
+     * @throws IOException throws an IO Exception if the new node couldn't be
+     * created
      */
     public Directory getDirectories(Directory current, String pathString, int recursionState) throws IOException {
         Path path = Paths.get(pathString);
@@ -40,21 +43,22 @@ public class DirReader {
 
                 if (isDir) {
                     try {
-                        Directory subDir = new Directory(name, current.x, current.y, color, current, false);
+                        Directory subDir = new Directory(name, current.getPath() + "\\" + name, current.x, current.y, current, color, false);
                         current.children.add(subDir);
 
                         if (recursionState < 0) {
+
                             getDirectories(subDir, p.toString(), recursionState + 1);
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    current.children.add(new Node(name, current.x, current.y, color, current, false));
+                    current.children.add(new Node(name, current.getPath() + "\\" + name, current.x, current.y, color, current, false));
                 }
             });
         } catch (IOException e) {
-            System.err.println("Fehler beim Lesen von " + pathString + ": " + e.getMessage());
+            System.err.println("Fehler beim Lesen von " + pathString + ": " + e.getStackTrace());
         }
 
         float startAngle = (float) (-Math.PI / 2.0);
@@ -71,24 +75,9 @@ public class DirReader {
         return current;
     }
 
-    public String getPath(Node pos) {
-        ArrayList<String> parts = new ArrayList<>();
-        Node cur = pos;
-
-        while (cur != null) {
-            String name = cur.getName();
-            if (name != null && !name.equals("/") && !name.isBlank()) {
-                parts.add(name);
-            }
-            cur = cur.getParent();
-        }
-        StringBuilder sb = new StringBuilder();
-        for (int i = parts.size() - 1; i >= 0; i--) {
-            sb.append(parts.get(i));
-            if (i != 0) sb.append("/");
-        }
-
-        return sb.toString();
+    public static String getNameFromPath(String path) {
+        String[] parts = path.split("\\\\");
+        return parts[parts.length - 1];
     }
 
     /**
@@ -99,7 +88,7 @@ public class DirReader {
     public void openFile(Node node) {
         if (Desktop.isDesktopSupported()) {
             try {
-                String fullPath = getPath(node);
+                String fullPath = node.getPath();
                 File fileToOpen = new File(fullPath);
 
                 if (fileToOpen.exists()) {

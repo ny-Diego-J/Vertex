@@ -11,7 +11,7 @@ public class Node {
     protected static final NVGColor sharedColor = NVGColor.create();
     private static final NVGColor textColor = NVGColor.create();
     protected static double moveSpeed = 1;
-    private final Directory parent;
+    private Directory parent;
     private final float fontSize;
     private final Vector4f color;
     public double moveAngle;
@@ -22,9 +22,11 @@ public class Node {
     protected boolean isParent;
     protected float radius = 25.0f;
     private String name;
+    private String path;
 
-    public Node(String name, float x, float y, Vector4f color, Directory parent, boolean isParent) {
+    public Node(String name, String path, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.name = name;
+        this.path = path;
         this.x = x;
         this.y = y;
         this.targetX = x;
@@ -32,6 +34,34 @@ public class Node {
         this.color = color;
         this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
         this.parent = parent;
+        this.isParent = isParent;
+        this.moveAngle = Math.random() * 360;
+    }
+
+    public Node(float x, float y, Vector4f color, Directory parent, boolean isParent, String path) {
+        this.name = DirReader.getNameFromPath(path);
+        this.path = path;
+        this.x = x;
+        this.y = y;
+        this.targetX = x;
+        this.targetY = y;
+        this.color = color;
+        this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
+        this.parent = parent;
+        this.isParent = isParent;
+        this.moveAngle = Math.random() * 360;
+    }
+
+    public Node(float x, float y, Vector4f color, boolean isParent, String path) {
+        this.name = DirReader.getNameFromPath(path);
+        this.path = path;
+        this.x = x;
+        this.y = y;
+        this.targetX = x;
+        this.targetY = y;
+        this.color = color;
+        this.parent = null;
+        this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
         this.isParent = isParent;
         this.moveAngle = Math.random() * 360;
     }
@@ -186,7 +216,21 @@ public class Node {
     }
 
     public Directory getParent() {
-        return parent;
+        String[] paths = path.split("\\\\");
+        if (parent != null) return parent;
+        if (paths.length > 1) {
+            String parentName = paths[paths.length - 2];
+            String newPath = path.replace("\\" + name, "");
+            if (newPath == "C:") newPath = "C:\\";
+            System.out.println(newPath);
+            return new Directory(parentName, newPath, 0, 0, (Directory) this, color, true);
+        } else {
+            return null;
+        }
+    }
+
+    public void setParent(Directory parent) {
+        this.parent = parent;
     }
 
     public void setIfParent(boolean parent) {
@@ -215,6 +259,14 @@ public class Node {
 
     public void setTargetY(double targetY) {
         this.targetY = targetY;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
     }
 
 }

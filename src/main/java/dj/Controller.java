@@ -8,13 +8,18 @@ public class Controller {
     private final int TIME = 60;
     protected Directory currentDir;
     protected DirReader dr = new DirReader();
-    private Directory root;
+    protected Directory root = new Directory("C:", "C:\\", 0, 0, null, new Vector4f(1, 0, 0, 1), true);
     private Gui gui;
     private int counter = TIME;
     public Thread timeThread;
 
-    public void run() {
+    public void run(String[] args) {
         reloadRoot();
+        if (args.length >= 1) {
+            setCurrentDir(new Directory(0, 0, new Vector4f(1, 0, 0, 1), true, args[0]));
+            currentDir.setParent(getParent(args[0]));
+        }
+        reloadCurrentDir();
         gui = new Gui(this);
         initialize();
         gui.run();
@@ -25,8 +30,7 @@ public class Controller {
      */
     public void reloadRoot() {
         try {
-            root = new Directory("c:\\", 0, 0, new Vector4f(1, 0, 0, 1), null, true);
-            root = dr.getDirectories(root, root.getName(), 0);
+            root = dr.getDirectories(root, root.getPath(), 0);
             currentDir = root;
             currentDir.moveAngle = (float) (-Math.PI / 2.0);
             currentDir.angleStep = (float) (2 * Math.PI / currentDir.getChildren().size());
@@ -42,7 +46,7 @@ public class Controller {
     public void reloadCurrentDir() {
         try {
             currentDir.setIfParent(false);
-            currentDir = dr.getDirectories(currentDir, dr.getPath(currentDir), 0);
+            currentDir = dr.getDirectories(currentDir, currentDir.getPath(), 0);
             currentDir.setIfParent(true);
         } catch (Exception e) {
             System.out.println(e.getMessage());
@@ -51,6 +55,21 @@ public class Controller {
 
     public void setCurrentDir(Directory dir) {
         currentDir = dir;
+    }
+
+    private Directory getParent(String path) {
+        String[] paths = path.split("\\\\");
+        if (paths.length > 1) {
+            String parentName = paths[paths.length - 2];
+            String name = paths[paths.length - 1];
+            String newPath = path.replace("\\" + name, "");
+            System.out.println(newPath);
+            if (newPath.equals("C:")) newPath = "C:\\";
+            System.out.println(newPath);
+            return new Directory(parentName, newPath, 0, 0, getParent(newPath), new Vector4f(1, 0, 0, 1), true);
+        } else {
+            return null;
+        }
     }
 
     private void initialize() {

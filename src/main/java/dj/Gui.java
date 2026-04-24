@@ -304,6 +304,7 @@ public class Gui {
                     } else if (rightMouseButtonPressed && !wasRightMouseButtonPressed) {
                         if (clicked == ct.currentDir && clicked.getParent() != null) {
                             Directory nextDir = clicked.getParent();
+                            System.out.println(nextDir.getPath());
                             updateCurrentDir(nextDir);
                             System.out.println("navigate to parent directory: " + nextDir.getName());
                             glfwSetWindowTitle(window, title + " - " + ct.currentDir.getName());
