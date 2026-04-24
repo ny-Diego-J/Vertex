@@ -270,7 +270,8 @@ public class Directory extends Node {
     }
 
     /**
-     * checks for all nodes if the collision has been checked and if not check it
+     * checks for all nodes if the collision has been checked and if not check
+     * it
      *
      * @param node node to check the collisions with
      * @param neighbors all possible neighbors
