@@ -11,6 +11,7 @@ public class Controller {
     private Directory root;
     private Gui gui;
     private int counter = TIME;
+    public Thread timeThread;
 
     public void run() {
         reloadRoot();
@@ -53,7 +54,7 @@ public class Controller {
     }
 
     private void initialize() {
-        new Thread(() -> {
+        timeThread = new Thread(() -> {
             while (counter >= 0) {
                 try {
                     Thread.sleep(1000);
@@ -62,11 +63,15 @@ public class Controller {
                         currentDir.setIdleState(true);
                         counter = TIME;
                     }
+                } catch (InterruptedException e) {
+                    break;
                 } catch (Exception e) {
                     System.out.println(e.getMessage());
                 }
             }
-        }).start();
+        });
+        timeThread.setDaemon(true);
+        timeThread.start();
     }
 
     public void resetTime() {

@@ -49,6 +49,7 @@ public class Gui {
         // Cleanup after close
         GLFW.glfwDestroyCursor(arrowCursor);
         GLFW.glfwDestroyCursor(handCursor);
+        ct.timeThread.interrupt();
         glfwTerminate();
         glfwSetErrorCallback(null).free();
     }
