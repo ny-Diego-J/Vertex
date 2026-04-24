@@ -4,14 +4,13 @@ import dj.filesystem.*;
 import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
-
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
 import org.lwjgl.glfw.*;
 import static org.lwjgl.glfw.GLFW.*;
-import static org.lwjgl.nanovg.NanoVGGL2.NVG_ANTIALIAS;
-import static org.lwjgl.nanovg.NanoVGGL2.NVG_STENCIL_STROKES;
+import static org.lwjgl.nanovg.NanoVGGL2.NVG_ANTIALIAS; // don't change the two to one
+import static org.lwjgl.nanovg.NanoVGGL2.NVG_STENCIL_STROKES; //it will break the file
 import static org.lwjgl.nanovg.NanoVG.nvgCreateFont;
 import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
