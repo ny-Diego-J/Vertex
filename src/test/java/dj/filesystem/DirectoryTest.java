@@ -1,9 +1,7 @@
 package dj.filesystem;
 
 import org.joml.Vector4f;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.lwjgl.glfw.GLFW;
 import org.mockito.MockedStatic;
 
@@ -67,6 +65,7 @@ class DirectoryTest {
             Node hovered = rootDir.getHoverdNode(205.0f, 205.0f);
 
             assertEquals(child, hovered);
+            glfwMock.verify(() -> GLFW.glfwSetCursor(anyLong(), anyLong()), atLeastOnce());
         }
     }
 
