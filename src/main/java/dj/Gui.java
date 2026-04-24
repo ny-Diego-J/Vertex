@@ -5,6 +5,10 @@ import org.lwjgl.glfw.GLFW;
 import org.lwjgl.glfw.GLFWErrorCallback;
 import org.lwjgl.opengl.GL;
 
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+
+import org.lwjgl.glfw.*;
 import static org.lwjgl.glfw.GLFW.*;
 import static org.lwjgl.nanovg.NanoVGGL2.NVG_ANTIALIAS;
 import static org.lwjgl.nanovg.NanoVGGL2.NVG_STENCIL_STROKES;
@@ -13,6 +17,9 @@ import static org.lwjgl.opengl.GL11.*;
 import static org.lwjgl.system.MemoryUtil.NULL;
 import static org.lwjgl.nanovg.NanoVGGL3.*;
 import static org.lwjgl.nanovg.NanoVG.*;
+
+import org.lwjgl.*;
+import java.nio.*;
 
 public class Gui {
     public static long window;
@@ -131,6 +138,9 @@ public class Gui {
         // WROOOOOOOOOOM
         glfwSwapInterval(1);
 
+        GLFWImage.Buffer icon = extractByteBufferFromImagePath("src/main/resources/imgs/tux.png");
+        glfwSetWindowIcon(window, icon);
+
         glfwShowWindow(window);
 
         GL.createCapabilities();
@@ -143,6 +153,42 @@ public class Gui {
         glOrtho(0, width, height, 0, -1, 1);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();
+    }
+
+    private GLFWImage.Buffer extractByteBufferFromImagePath(String s) {
+        try {
+            BufferedImage bi = ImageIO.read(new java.io.File(s));
+
+            int width = bi.getWidth();
+            int height = bi.getHeight();
+
+            int[] pixels = new int[width * height];
+            bi.getRGB(0, 0, width, height, pixels, 0, width);
+
+            ByteBuffer buffer = BufferUtils.createByteBuffer(width * height * 4);
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    int pixel = pixels[y * width + x];
+                    buffer.put((byte) ((pixel >> 16) & 0xFF));
+                    buffer.put((byte) ((pixel >> 8) & 0xFF));
+                    buffer.put((byte) (pixel & 0xFF));
+                    buffer.put((byte) ((pixel >> 24) & 0xFF));
+                }
+            }
+            buffer.flip();
+
+            GLFWImage icon = GLFWImage.malloc();
+            icon.set(width, height, buffer);
+
+            GLFWImage.Buffer iconBuffer = GLFWImage.malloc(1);
+            iconBuffer.put(0, icon);
+
+            return iconBuffer;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     /**
