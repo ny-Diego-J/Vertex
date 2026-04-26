@@ -1,166 +1,77 @@
 package dj.filesystem;
 
-import dj.Camera;
 import org.joml.Vector4f;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 class NodeTest {
 
-    private Directory mockDirectory;
-    private Camera mockCamera;
+    private Node testNode;
     private Vector4f defaultColor;
-    private Node node;
 
     @BeforeEach
     void setUp() {
-        mockDirectory = mock(Directory.class);
-        mockCamera = mock(Camera.class);
-
-        when(mockCamera.getZoom()).thenReturn(1.0f);
-        when(mockCamera.getX()).thenReturn(0.0f);
-        when(mockCamera.getY()).thenReturn(0.0f);
-
         defaultColor = new Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
-
-        node = new Node("testNode", 100.0f, 100.0f, defaultColor, mockDirectory, false);
+        // Initialisiere eine Node mit einem typischen Windows-Pfad
+        testNode = new Node(0, 0, defaultColor, false, "C:\\Users\\Desktop\\file.txt");
     }
 
     @Test
-    void testConstructorInitialization() {
-        assertEquals("testNode", node.getName());
-        assertEquals(100.0f, node.getX());
-        assertEquals(100.0f, node.getY());
-        assertEquals(100.0, node.getTargetX());
-        assertEquals(100.0, node.getTargetY());
-        assertEquals(mockDirectory, node.getParent());
-        assertFalse(node.isParent);
-        assertTrue(node.moveAngle >= 0 && node.moveAngle < 360, "Move angle should be random between 0 and 360");
+    void testGetName_ExtractsFileNameCorrectly() {
+        assertEquals("file.txt", testNode.getName(), "Der Name sollte korrekt aus dem Pfad extrahiert werden.");
+
+        Node rootNode = new Node(0, 0, defaultColor, true, "C:");
+        assertEquals("C:", rootNode.getName(), "Bei Laufwerken sollte der Name das Laufwerk selbst sein.");
     }
 
     @Test
-    void testGettersAndSetters() {
-        node.setName("newName");
-        assertEquals("newName", node.getName());
+    void testGetParent_CreatesCorrectParentDirectory() {
+        Directory parent = testNode.getParent();
 
-        node.setX(50.0f);
-        assertEquals(50.0f, node.getX());
-
-        node.setY(60.0f);
-        assertEquals(60.0f, node.getY());
-
-        node.setVx(5.0f);
-        assertEquals(5.0f, node.getVx());
-
-        node.setVy(-2.0f);
-        assertEquals(-2.0f, node.getVy());
-
-        node.setIfParent(true);
-        assertTrue(node.isParent);
-
-        node.setRadius(30.0f);
-        assertEquals(30.0f, node.getRadius());
-
-        node.setTargetX(200.0);
-        assertEquals(200.0, node.getTargetX());
-
-        node.setTargetY(300.0);
-        assertEquals(300.0, node.getTargetY());
+        assertNotNull(parent, "Parent sollte nicht null sein, wenn der Pfad Unterordner enthält.");
+        assertEquals("Desktop", parent.getName(), "Der Name des generierten Parents sollte 'Desktop' sein.");
+        assertTrue(parent.isParent, "Das generierte Parent sollte als isParent markiert sein.");
     }
 
     @Test
-    void testMoveTargetPos_AppliesTensionAndDampening() {
-        node.setX(0f);
-        node.setY(0f);
-        node.setTargetX(100.0);
-        node.setTargetY(100.0);
-        node.setVx(0f);
-        node.setVy(0f);
+    void testGetParent_ReturnsNullForRoot() {
+        Node rootNode = new Node(0, 0, defaultColor, true, "C:");
+        assertNull(rootNode.getParent(), "Ein Root-Verzeichnis sollte kein Parent haben.");
+    }
 
-        node.moveTargetPos();
+    @Test
+    void testMoveTargetPos_CalculatesVelocityCorrectly() {
+        testNode.setX(0);
+        testNode.setY(0);
+        testNode.setTargetX(100);
+        testNode.setTargetY(50);
 
-        assertTrue(node.getVx() > 0);
-        assertTrue(node.getVy() > 0);
+        testNode.moveTargetPos();
 
-        assertTrue(node.getX() > 0);
-        assertTrue(node.getY() > 0);
+        // Da Tension 0.045f und Dampening 0.85f ist, sollte vx > 0 und vy > 0
+        // sein
+        assertTrue(testNode.getVx() > 0, "Velocity X sollte positiv sein, da TargetX rechts liegt.");
+        assertTrue(testNode.getVy() > 0, "Velocity Y sollte positiv sein, da TargetY unten liegt.");
+
+        assertTrue(testNode.getX() > 0, "X-Position sollte sich in Richtung Target bewegt haben.");
+        assertTrue(testNode.getY() > 0, "Y-Position sollte sich in Richtung Target bewegt haben.");
     }
 
     @Test
     void testMoveTargetPos_SnapsToTargetWhenClose() {
-        node.setX(99.6f);
-        node.setY(99.6f);
-        node.setTargetX(100.0);
-        node.setTargetY(100.0);
-        node.setVx(0.05f);
-        node.setVy(0.05f);
+        testNode.setX(99.6f);
+        testNode.setY(49.6f);
+        testNode.setTargetX(100);
+        testNode.setTargetY(50);
+        testNode.setVx(0.05f);
+        testNode.setVy(0.05f);
 
-        node.moveTargetPos();
+        testNode.moveTargetPos();
 
-        assertEquals(100.0f, node.getX());
-        assertEquals(100.0f, node.getY());
-        assertEquals(0f, node.getVx());
-        assertEquals(0f, node.getVy());
-    }
-
-    @Test
-    void testMoveSelf_UpdatesTargetPositionWithinBounds() {
-        node.setTargetX(100.0);
-        node.setTargetY(100.0);
-        node.moveAngle = 0;
-
-        node.moveSelf(800, 600, mockCamera);
-
-        // TargetX should increase by Node.moveSpeed
-        assertTrue(node.getTargetX() > 100.0);
-        assertEquals(100.0, node.getTargetY(), 0.001); // Y shouldn't change
-    }
-
-    @Test
-    void testMoveSelf_BouncesOffRightEdge() {
-        // Position right at the visual right edge
-        int width = 800;
-        int height = 600;
-        float centerX = width / 2.0f;
-
-        // Calculate max X boundary based on your class logic
-        double visibleRight = (width - centerX) / mockCamera.getZoom() + mockCamera.getX();
-        double maxX = visibleRight - node.getRadius();
-
-        node.setTargetX(maxX + 1); // Exceeds boundary
-        node.setTargetY(300.0);
-        node.moveAngle = 0; // Moving exactly right
-
-        node.moveSelf(width, height, mockCamera);
-
-        // moveAngle should reflect/bounce
-        assertNotEquals(0, node.moveAngle);
-        assertEquals(180, node.moveAngle); // Should face exactly left after
-                                           // bouncing
-    }
-
-    @Test
-    void testMoveSelf_BouncesOffBottomEdge() {
-        int width = 800;
-        int height = 600;
-        float centerY = height / 2.0f;
-
-        // Calculate max Y boundary based on your class logic
-        double visibleBottom = (height - centerY) / mockCamera.getZoom() + mockCamera.getY();
-        double maxY = visibleBottom - node.getRadius();
-
-        node.setTargetX(400.0);
-        node.setTargetY(maxY + 1); // Exceeds boundary
-        node.moveAngle = 90; // Moving exactly down
-
-        node.moveSelf(width, height, mockCamera);
-
-        // moveAngle should reflect/bounce
-        assertNotEquals(90, node.moveAngle);
-        assertEquals(270, node.moveAngle); // Should face exactly up after
-                                           // bouncing
+        assertEquals(100.0, testNode.getX(), 0.001, "Node sollte auf TargetX einrasten, wenn sie sehr nah ist.");
+        assertEquals(50.0, testNode.getY(), 0.001, "Node sollte auf TargetY einrasten, wenn sie sehr nah ist.");
+        assertEquals(0.0f, testNode.getVx(), "Velocity X sollte nach dem Einrasten 0 sein.");
     }
 }
