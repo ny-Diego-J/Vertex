@@ -3,13 +3,17 @@ package dj.filesystem;
 import dj.Camera;
 import org.joml.Vector4f;
 import org.lwjgl.nanovg.NVGColor;
+import org.lwjgl.nanovg.NVGPaint;
 import org.lwjgl.nanovg.NanoVG;
+import org.lwjgl.system.MemoryStack;
+import java.nio.IntBuffer;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
-    protected static final NVGColor sharedColor = NVGColor.create();
-    private static final NVGColor textColor = NVGColor.create();
+    public static final NVGColor sharedColor = NVGColor.create();
+    public static final NVGColor textColorObj = NVGColor.create();
+    private static long lastLoadTime = 0;
     protected static double moveSpeed = 1;
     private Directory parent;
     private final float fontSize;
@@ -22,6 +26,7 @@ public class Node {
     protected boolean isParent;
     protected float radius = 25.0f;
     private String path;
+    private int imageHandle = -1;
 
     public Node(String path, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.path = path;
@@ -62,13 +67,6 @@ public class Node {
         this.moveAngle = Math.random() * 360;
     }
 
-    /**
-     * default movement of the center dot
-     * 
-     * @param width window width
-     * @param height window height
-     * @param camera current camera
-     */
     protected void moveSelf(int width, int height, Camera camera) {
         double radians = Math.toRadians(moveAngle);
         double dx = moveSpeed * Math.cos(radians);
@@ -108,34 +106,66 @@ public class Node {
         targetY += dy;
     }
 
-    /**
-     * prints the name of the node
-     */
     public void printSelfText(long nvg) {
         NanoVG.nvgFontSize(nvg, fontSize);
         NanoVG.nvgFontFace(nvg, "jbm");
-        nvgFillColor(nvg, nvgRGBAf(1, 1, 1, 1, textColor));
+        nvgFillColor(nvg, nvgRGBAf(1, 1, 1, 1, textColorObj));
         NanoVG.nvgTextAlign(nvg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
         NanoVG.nvgText(nvg, x, y, getName());
     }
 
-    /**
-     * prints a circle at the given position with the radius
-     * 
-     * @param x x position to print at
-     * @param y y position to print at
-     * @param radius radius of the circle
-     */
     public void printAtPos(long nvg, float x, float y, float radius) {
+        String lowerPath = path.toLowerCase();
+
+        if (lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
+
+            if (imageHandle == -1) {
+                if (System.currentTimeMillis() - lastLoadTime > 30) {
+                    imageHandle = nvgCreateImage(nvg, path, 0);
+                    lastLoadTime = System.currentTimeMillis();
+                }
+            }
+
+            if (imageHandle > 0) {
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    IntBuffer w = stack.mallocInt(1);
+                    IntBuffer h = stack.mallocInt(1);
+                    nvgImageSize(nvg, imageHandle, w, h);
+
+                    float imgW = w.get(0);
+                    float imgH = h.get(0);
+
+                    float maxBoxSize = radius * 2.0f;
+                    float scale = Math.min(maxBoxSize / imgW, maxBoxSize / imgH);
+
+                    float finalW = imgW * scale;
+                    float finalH = imgH * scale;
+
+                    float drawX = x - (finalW / 2.0f);
+                    float drawY = y - (finalH / 2.0f);
+
+                    NVGPaint imgPaint = NVGPaint.malloc(stack);
+                    nvgImagePattern(nvg, drawX, drawY, finalW, finalH, 0.0f, imageHandle, 1.0f, imgPaint);
+                    nvgBeginPath(nvg);
+                    nvgRect(nvg, drawX, drawY, finalW, finalH);
+                    nvgFillPaint(nvg, imgPaint);
+                    nvgFill(nvg);
+                }
+            } else {
+                drawDefaultCircle(nvg, x, y, radius);
+            }
+        } else {
+            drawDefaultCircle(nvg, x, y, radius);
+        }
+    }
+
+    private void drawDefaultCircle(long nvg, float x, float y, float radius) {
         nvgBeginPath(nvg);
         nvgCircle(nvg, x, y, radius);
         nvgFillColor(nvg, getColor());
         nvgFill(nvg);
     }
 
-    /**
-     * moves the node the calculated distance to its target position
-     */
     public void moveTargetPos() {
         float tension = 0.045f;
         float dampening = 0.85f;
@@ -160,11 +190,6 @@ public class Node {
         }
     }
 
-    /**
-     * gets the color of the directory so it doesn't have to create a new one
-     * 
-     * @return color
-     */
     public NVGColor getColor() {
         if (isParent) nvgRGBAf(1, 0, 0, 1, sharedColor);
         else nvgRGBAf(color.x, color.y, color.z, color.w, sharedColor);
@@ -213,8 +238,7 @@ public class Node {
         if (parent != null) return parent;
         if (paths.length > 1) {
             String newPath = path.replace("\\" + getName(), "");
-            if (newPath == "C:") newPath = "C:\\";
-            System.out.println(newPath);
+            if (newPath.equals("C:")) newPath = "C:\\";
             return new Directory(newPath, 0, 0, (Directory) this, color, true);
         } else {
             return null;
@@ -260,5 +284,4 @@ public class Node {
     public void setPath(String path) {
         this.path = path;
     }
-
 }

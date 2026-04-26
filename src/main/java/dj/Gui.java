@@ -24,6 +24,7 @@ public class Gui {
     public static long window;
     public static long handCursor;
     public static long arrowCursor;
+    public static long nvg;
     private final String title = "Vertex";
     private final int[] winWidth = new int[1];
     private final int[] winHeight = new int[1];
@@ -194,7 +195,7 @@ public class Gui {
      * main loop for printing
      */
     private void loop() {
-        long nvg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
+        nvg = nvgCreate(NVG_ANTIALIAS | NVG_STENCIL_STROKES);
         if (nvg == 0) {
             throw new RuntimeException("NanoVG initialization has failed!!");
         }

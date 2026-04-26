@@ -1,8 +1,9 @@
 package dj;
 
+import org.joml.Vector4f;
+
 import dj.filesystem.DirReader;
 import dj.filesystem.Directory;
-import org.joml.Vector4f;
 
 public class Controller {
     private final int TIME = 60;
@@ -14,13 +15,14 @@ public class Controller {
     public Thread timeThread;
 
     public void run(String[] args) {
+
+        gui = new Gui(this);
         reloadRoot();
         if (args.length >= 1) {
             setCurrentDir(new Directory(0, 0, new Vector4f(1, 0, 0, 1), true, args[0]));
             currentDir.setParent(getParent(args[0]));
         }
         reloadCurrentDir();
-        gui = new Gui(this);
         initialize();
         gui.run();
     }
