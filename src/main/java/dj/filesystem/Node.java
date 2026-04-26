@@ -21,39 +21,35 @@ public class Node {
     protected float vy = 0.0f;
     protected boolean isParent;
     protected float radius = 25.0f;
-    private String name;
     private String path;
 
-    public Node(String name, String path, float x, float y, Vector4f color, Directory parent, boolean isParent) {
-        this.name = name;
+    public Node(String path, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.path = path;
         this.x = x;
         this.y = y;
         this.targetX = x;
         this.targetY = y;
         this.color = color;
-        this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
+        this.fontSize = Math.max(10.0f, radius / (getName().length() * 0.5f));
         this.parent = parent;
         this.isParent = isParent;
         this.moveAngle = Math.random() * 360;
     }
 
     public Node(float x, float y, Vector4f color, Directory parent, boolean isParent, String path) {
-        this.name = DirReader.getNameFromPath(path);
         this.path = path;
         this.x = x;
         this.y = y;
         this.targetX = x;
         this.targetY = y;
         this.color = color;
-        this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
+        this.fontSize = Math.max(10.0f, radius / (getName().length() * 0.5f));
         this.parent = parent;
         this.isParent = isParent;
         this.moveAngle = Math.random() * 360;
     }
 
     public Node(float x, float y, Vector4f color, boolean isParent, String path) {
-        this.name = DirReader.getNameFromPath(path);
         this.path = path;
         this.x = x;
         this.y = y;
@@ -61,7 +57,7 @@ public class Node {
         this.targetY = y;
         this.color = color;
         this.parent = null;
-        this.fontSize = Math.max(10.0f, radius / (name.length() * 0.5f));
+        this.fontSize = Math.max(10.0f, radius / (getName().length() * 0.5f));
         this.isParent = isParent;
         this.moveAngle = Math.random() * 360;
     }
@@ -120,7 +116,7 @@ public class Node {
         NanoVG.nvgFontFace(nvg, "jbm");
         nvgFillColor(nvg, nvgRGBAf(1, 1, 1, 1, textColor));
         NanoVG.nvgTextAlign(nvg, NVG_ALIGN_CENTER | NVG_ALIGN_MIDDLE);
-        NanoVG.nvgText(nvg, x, y, name);
+        NanoVG.nvgText(nvg, x, y, getName());
     }
 
     /**
@@ -176,11 +172,8 @@ public class Node {
     }
 
     public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
+        String[] parts = path.split("\\\\");
+        return parts[parts.length - 1];
     }
 
     public float getX() {
@@ -219,11 +212,10 @@ public class Node {
         String[] paths = path.split("\\\\");
         if (parent != null) return parent;
         if (paths.length > 1) {
-            String parentName = paths[paths.length - 2];
-            String newPath = path.replace("\\" + name, "");
+            String newPath = path.replace("\\" + getName(), "");
             if (newPath == "C:") newPath = "C:\\";
             System.out.println(newPath);
-            return new Directory(parentName, newPath, 0, 0, (Directory) this, color, true);
+            return new Directory(newPath, 0, 0, (Directory) this, color, true);
         } else {
             return null;
         }

@@ -16,15 +16,15 @@ public class Directory extends Node {
     public float startAngle = (float) (-Math.PI / 2.0f);
     public float angleStep = 0;
 
-    public Directory(String name, String path, float x, float y, Directory parent, Vector4f color, boolean isParent) {
-        super(name, path, x, y, color, parent, isParent);
+    public Directory(String path, float x, float y, Directory parent, Vector4f color, boolean isParent) {
+        super(path, x, y, color, parent, isParent);
     }
 
     public Directory(float x, float y, Directory parent, Vector4f color, boolean isParent, String path) {
         super(x, y, color, parent, isParent, path);
     }
 
-    public Directory(float x, float y,Vector4f color, boolean isParent, String path) {
+    public Directory(float x, float y, Vector4f color, boolean isParent, String path) {
         super(x, y, color, isParent, path);
     }
 

@@ -8,7 +8,7 @@ public class Controller {
     private final int TIME = 60;
     protected Directory currentDir;
     protected DirReader dr = new DirReader();
-    protected Directory root = new Directory("C:", "C:\\", 0, 0, null, new Vector4f(1, 0, 0, 1), true);
+    protected Directory root = new Directory("C:\\", 0, 0, null, new Vector4f(1, 0, 0, 1), true);
     private Gui gui;
     private int counter = TIME;
     public Thread timeThread;
@@ -60,13 +60,12 @@ public class Controller {
     private Directory getParent(String path) {
         String[] paths = path.split("\\\\");
         if (paths.length > 1) {
-            String parentName = paths[paths.length - 2];
             String name = paths[paths.length - 1];
             String newPath = path.replace("\\" + name, "");
             System.out.println(newPath);
             if (newPath.equals("C:")) newPath = "C:\\";
             System.out.println(newPath);
-            return new Directory(parentName, newPath, 0, 0, getParent(newPath), new Vector4f(1, 0, 0, 1), true);
+            return new Directory(newPath, 0, 0, getParent(newPath), new Vector4f(1, 0, 0, 1), true);
         } else {
             return null;
         }

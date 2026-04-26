@@ -43,7 +43,7 @@ public class DirReader {
 
                 if (isDir) {
                     try {
-                        Directory subDir = new Directory(name, current.getPath() + "\\" + name, current.x, current.y, current, color, false);
+                        Directory subDir = new Directory(current.getPath() + "\\" + name, current.x, current.y, current, color, false);
                         current.children.add(subDir);
 
                         if (recursionState < 0) {
@@ -54,7 +54,7 @@ public class DirReader {
                         throw new RuntimeException(e);
                     }
                 } else {
-                    current.children.add(new Node(name, current.getPath() + "\\" + name, current.x, current.y, color, current, false));
+                    current.children.add(new Node(current.getPath() + "\\" + name, current.x, current.y, color, current, false));
                 }
             });
         } catch (IOException e) {
