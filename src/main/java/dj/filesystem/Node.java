@@ -7,6 +7,10 @@ import org.lwjgl.nanovg.NVGPaint;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.system.MemoryStack;
 import java.nio.IntBuffer;
+import org.lwjgl.system.MemoryUtil;
+import java.nio.ByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
@@ -27,6 +31,9 @@ public class Node {
     protected float radius = 25.0f;
     private String path;
     private int imageHandle = -1;
+    private volatile boolean isImageLoading = false;
+    private volatile boolean isReadyToBind = false;
+    private ByteBuffer imageData = null;
 
     public Node(String path, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.path = path;
@@ -114,7 +121,7 @@ public class Node {
         NanoVG.nvgText(nvg, x, y, getName());
     }
 
-    public void printAtPos(long nvg, float x, float y, float radius) {
+    public void printPos(long nvg, float x, float y, float radius) {
         String lowerPath = path.toLowerCase();
 
         if (lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
@@ -156,6 +163,80 @@ public class Node {
             }
         } else {
             drawDefaultCircle(nvg, x, y, radius);
+        }
+    }
+
+    public void printAtPos(long nvg, float x, float y, float radius) {
+        if (this instanceof Directory) {
+            drawDefaultCircle(nvg, x, y, radius);
+            return;
+        }
+
+        if (imageHandle > 0) {
+            drawImage(nvg, x, y, radius);
+            return;
+        }
+
+        if (isReadyToBind && imageData != null) {
+            imageHandle = NanoVG.nvgCreateImageMem(nvg, 0, imageData);
+
+            MemoryUtil.memFree(imageData);
+            imageData = null;
+            isReadyToBind = false;
+
+            return;
+        }
+
+        if (!isImageLoading && imageHandle <= 0) {
+            isImageLoading = true;
+
+            String lowerPath = path.toLowerCase();
+            boolean isImage = lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg");
+
+            final String fileToLoad = isImage ? path : "src/main/resources/imgs/fileicon.png";
+
+            new Thread(() -> {
+                try {
+                    byte[] bytes = Files.readAllBytes(Paths.get(fileToLoad));
+
+                    imageData = MemoryUtil.memAlloc(bytes.length);
+                    imageData.put(bytes);
+                    imageData.flip();
+
+                    isReadyToBind = true;
+                } catch (Exception e) {
+                    System.err.println("Fehler beim Laden von: " + fileToLoad);
+                    isImageLoading = false;
+                }
+            }).start();
+        }
+        drawDefaultCircle(nvg, x, y, radius);
+    }
+
+    private void drawImage(long nvg, float x, float y, float radius) {
+        try (MemoryStack stack = MemoryStack.stackPush()) {
+            IntBuffer w = stack.mallocInt(1);
+            IntBuffer h = stack.mallocInt(1);
+            nvgImageSize(nvg, imageHandle, w, h);
+
+            float imgW = w.get(0);
+            float imgH = h.get(0);
+
+            float maxBoxSize = radius * 2.0f;
+            float scale = Math.min(maxBoxSize / imgW, maxBoxSize / imgH);
+
+            float finalW = imgW * scale;
+            float finalH = imgH * scale;
+
+            float drawX = x - (finalW / 2.0f);
+            float drawY = y - (finalH / 2.0f);
+
+            NVGPaint imgPaint = NVGPaint.malloc(stack);
+            nvgImagePattern(nvg, drawX, drawY, finalW, finalH, 0.0f, imageHandle, 1.0f, imgPaint);
+            nvgBeginPath(nvg);
+            nvgRect(nvg, drawX, drawY, finalW, finalH);
+            nvgFillPaint(nvg, imgPaint);
+            nvgFill(nvg);
         }
     }
 
