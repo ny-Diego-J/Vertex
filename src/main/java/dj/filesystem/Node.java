@@ -7,17 +7,16 @@ import org.lwjgl.nanovg.NVGPaint;
 import org.lwjgl.nanovg.NanoVG;
 import org.lwjgl.system.MemoryStack;
 import java.nio.IntBuffer;
-import org.lwjgl.system.MemoryUtil;
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import org.lwjgl.stb.STBImage;
 
 import static org.lwjgl.nanovg.NanoVG.*;
 
 public class Node {
     public static final NVGColor sharedColor = NVGColor.create();
     public static final NVGColor textColorObj = NVGColor.create();
-    private static long lastLoadTime = 0;
     protected static double moveSpeed = 1;
     private Directory parent;
     private final float fontSize;
@@ -34,6 +33,8 @@ public class Node {
     private volatile boolean isImageLoading = false;
     private volatile boolean isReadyToBind = false;
     private ByteBuffer imageData = null;
+    private static final ExecutorService imageLoader = Executors.newFixedThreadPool(4);
+    private int imgWidth, imgHeight;
 
     public Node(String path, float x, float y, Vector4f color, Directory parent, boolean isParent) {
         this.path = path;
@@ -121,51 +122,6 @@ public class Node {
         NanoVG.nvgText(nvg, x, y, getName());
     }
 
-    public void printPos(long nvg, float x, float y, float radius) {
-        String lowerPath = path.toLowerCase();
-
-        if (lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) {
-
-            if (imageHandle == -1) {
-                if (System.currentTimeMillis() - lastLoadTime > 30) {
-                    imageHandle = nvgCreateImage(nvg, path, 0);
-                    lastLoadTime = System.currentTimeMillis();
-                }
-            }
-
-            if (imageHandle > 0) {
-                try (MemoryStack stack = MemoryStack.stackPush()) {
-                    IntBuffer w = stack.mallocInt(1);
-                    IntBuffer h = stack.mallocInt(1);
-                    nvgImageSize(nvg, imageHandle, w, h);
-
-                    float imgW = w.get(0);
-                    float imgH = h.get(0);
-
-                    float maxBoxSize = radius * 2.0f;
-                    float scale = Math.min(maxBoxSize / imgW, maxBoxSize / imgH);
-
-                    float finalW = imgW * scale;
-                    float finalH = imgH * scale;
-
-                    float drawX = x - (finalW / 2.0f);
-                    float drawY = y - (finalH / 2.0f);
-
-                    NVGPaint imgPaint = NVGPaint.malloc(stack);
-                    nvgImagePattern(nvg, drawX, drawY, finalW, finalH, 0.0f, imageHandle, 1.0f, imgPaint);
-                    nvgBeginPath(nvg);
-                    nvgRect(nvg, drawX, drawY, finalW, finalH);
-                    nvgFillPaint(nvg, imgPaint);
-                    nvgFill(nvg);
-                }
-            } else {
-                drawDefaultCircle(nvg, x, y, radius);
-            }
-        } else {
-            drawDefaultCircle(nvg, x, y, radius);
-        }
-    }
-
     public void printAtPos(long nvg, float x, float y, float radius) {
         if (this instanceof Directory) {
             drawDefaultCircle(nvg, x, y, radius);
@@ -178,9 +134,9 @@ public class Node {
         }
 
         if (isReadyToBind && imageData != null) {
-            imageHandle = NanoVG.nvgCreateImageMem(nvg, 0, imageData);
+            imageHandle = NanoVG.nvgCreateImageRGBA(nvg, imgWidth, imgHeight, 0, imageData);
 
-            MemoryUtil.memFree(imageData);
+            STBImage.stbi_image_free(imageData);
             imageData = null;
             isReadyToBind = false;
 
@@ -192,23 +148,30 @@ public class Node {
 
             String lowerPath = path.toLowerCase();
             boolean isImage = lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg");
-
             final String fileToLoad = isImage ? path : "src/main/resources/imgs/fileicon.png";
 
-            new Thread(() -> {
-                try {
-                    byte[] bytes = Files.readAllBytes(Paths.get(fileToLoad));
+            imageLoader.submit(() -> {
+                try (MemoryStack stack = MemoryStack.stackPush()) {
+                    IntBuffer w = stack.mallocInt(1);
+                    IntBuffer h = stack.mallocInt(1);
+                    IntBuffer channels = stack.mallocInt(1);
 
-                    imageData = MemoryUtil.memAlloc(bytes.length);
-                    imageData.put(bytes);
-                    imageData.flip();
+                    ByteBuffer pixels = STBImage.stbi_load(fileToLoad, w, h, channels, 4);
 
-                    isReadyToBind = true;
+                    if (pixels != null) {
+                        this.imgWidth = w.get(0);
+                        this.imgHeight = h.get(0);
+                        this.imageData = pixels;
+                        this.isReadyToBind = true;
+                    } else {
+                        System.err.println("Konnte Bild nicht laden: " + fileToLoad);
+                        isImageLoading = false;
+                    }
                 } catch (Exception e) {
                     System.err.println("Fehler beim Laden von: " + fileToLoad);
                     isImageLoading = false;
                 }
-            }).start();
+            });
         }
         drawDefaultCircle(nvg, x, y, radius);
     }
