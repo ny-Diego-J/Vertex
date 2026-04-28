@@ -147,8 +147,11 @@ public class Node {
             isImageLoading = true;
 
             String lowerPath = path.toLowerCase();
-            boolean isImage = lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg");
-            final String fileToLoad = isImage ? path : "src/main/resources/imgs/fileicon.png";
+            String fileLoad = "";
+            if (lowerPath.endsWith(".png") || lowerPath.endsWith(".jpg") || lowerPath.endsWith(".jpeg")) fileLoad = path;
+            else if (lowerPath.endsWith(".zip") || lowerPath.endsWith(".rar") || lowerPath.endsWith(".tar.gz")) fileLoad = "src/main/resources/imgs/zip.png";
+            else fileLoad = "src/main/resources/imgs/fileicon.png";
+            final String fileToLoad = fileLoad;
 
             imageLoader.submit(() -> {
                 try (MemoryStack stack = MemoryStack.stackPush()) {
